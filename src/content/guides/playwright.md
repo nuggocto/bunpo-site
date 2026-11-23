@@ -3,8 +3,8 @@
 title: "Playwright"
 order: 5
 reportFormat: "JUnit XML (classname + prefix)"
-selection: "--test-list"
-summary: "Pass exact specs via --test-list and record Playwright JUnit reports with --file-from classname --path-prefix tests."
+selection: "Anchored escaped regex"
+summary: "Pass exact specs as anchored escaped regexes and record Playwright JUnit reports with --file-from classname --path-prefix tests."
 ---
 
 Bunpō splits your test files across parallel GitHub Actions machines by how
@@ -21,8 +21,10 @@ second run on, each machine gets a balanced share.
   `--file-from classname --path-prefix tests`. Change `tests` in both places
   if your `testDir` is different.
 - Playwright reads file arguments as regular expressions, so
-  `tests/a.spec.ts` would also run `tests/x/tests/a.spec.ts`. The share goes
-  through `--test-list` instead, which matches files exactly.
+  `tests/a.spec.ts` would also run `tests/x/tests/a.spec.ts`. `--test-list`
+  breaks on filenames starting with `[` (such as `tests/[id].spec.ts`), so
+  the workflow passes each path as a case-sensitive anchored, escaped regular
+  expression (`/^\/abs\/path$/`) matching only itself.
 - The `find` command below matches Playwright's default `testMatch`
   (`**/*.@(spec|test).?(c|m)[jt]s?(x)`). If your config uses a custom
   `testMatch` or `--project`/`--grep` filters, use
@@ -83,9 +85,16 @@ jobs:
           fi
 
           status=0
-          # --test-list takes paths relative to testDir.
-          sed 's|^tests/||' mine.txt > playwright-list.txt
-          npx playwright test --test-list playwright-list.txt --reporter=list,junit || status=$?
+          # Playwright reads each argument as a regular expression over absolute
+          # paths, and --test-list rejects filenames starting with "[" (such as
+          # Next.js dynamic routes), so each path becomes a case-sensitive
+          # anchored, escaped expression matching only itself.
+          patterns=()
+          while IFS= read -r pattern; do patterns+=("$pattern"); done < <(
+            awk -v dir="$PWD/" '{ print dir $0 }' mine.txt |
+              sed -e 's/[][\.*^$+?(){}|/]/\\&/g' -e 's/^/\/^/' -e 's/$/$\//'
+          )
+          npx playwright test --reporter=list,junit "${patterns[@]}" || status=$?
           bunpo record --index "$INDEX" --file-from classname --path-prefix tests junit.xml
           exit "$status"
       - if: ${{ !cancelled() }}
