@@ -23,10 +23,10 @@ second run on, each machine gets a balanced share.
 - Playwright reads file arguments as regular expressions, so
   `tests/a.spec.ts` would also run `tests/x/tests/a.spec.ts`. The share goes
   through `--test-list` instead, which matches files exactly.
-- The `find` command below covers Playwright's default `*.spec.*` and
-  `*.test.*` extensions (`.ts`, `.js`, `.mjs`). If your `testMatch` uses
-  other extensions (such as `.tsx`) or filters, use `npx playwright test --list --reporter=json`
-  under Common setups.
+- The `find` command below matches Playwright's default `testMatch`
+  (`**/*.@(spec|test).?(c|m)[jt]s?(x)`). If your config uses a custom
+  `testMatch` or `--project`/`--grep` filters, use
+  `npx playwright test --list --reporter=json` under Common setups.
 
 ## The workflow
 
@@ -72,7 +72,7 @@ jobs:
           TOTAL: ${{ strategy.job-total }}
           PLAYWRIGHT_JUNIT_OUTPUT_FILE: junit.xml
         run: |
-          find tests -type f \( -name '*.spec.ts' -o -name '*.spec.js' -o -name '*.spec.mjs' -o -name '*.test.ts' -o -name '*.test.js' -o -name '*.test.mjs' \) | bunpo split --index "$INDEX" --total "$TOTAL" > mine.txt
+          find tests \( -name '*.spec.[jt]s' -o -name '*.spec.[jt]sx' -o -name '*.spec.[cm][jt]s' -o -name '*.spec.[cm][jt]sx' -o -name '*.test.[jt]s' -o -name '*.test.[jt]sx' -o -name '*.test.[cm][jt]s' -o -name '*.test.[cm][jt]sx' \) | bunpo split --index "$INDEX" --total "$TOTAL" > mine.txt
           mine=()
           while IFS= read -r path; do mine+=("$path"); done < mine.txt
 
@@ -115,7 +115,7 @@ jobs:
           path: .bunpo
           merge-multiple: true
       - name: Verify the assignment
-        run: find tests -type f \( -name '*.spec.ts' -o -name '*.spec.js' -o -name '*.spec.mjs' -o -name '*.test.ts' -o -name '*.test.js' -o -name '*.test.mjs' \) | bunpo verify
+        run: find tests \( -name '*.spec.[jt]s' -o -name '*.spec.[jt]sx' -o -name '*.spec.[cm][jt]s' -o -name '*.spec.[cm][jt]sx' -o -name '*.test.[jt]s' -o -name '*.test.[jt]sx' -o -name '*.test.[cm][jt]s' -o -name '*.test.[cm][jt]sx' \) | bunpo verify
       - name: Merge timings
         run: bunpo merge
       - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test.result == 'success' }}
@@ -140,8 +140,8 @@ jobs:
   if a machine's report is missing.
 - **Only passing `main` runs save timings.** Pull requests read them and never
   overwrite them, and failed `main` runs leave the previous cache intact so
-  "Re-run failed jobs" restores the same split. Each save uses a new cache key,
-  and `restore-keys` picks the newest.
+  re-running a failed shard does not hit timings saved by the same run. Each
+  save uses a new cache key, and `restore-keys` picks the newest.
 
 Change `machine: [0, 1, 2, 3]` to use more or fewer machines. The actions are
 shown by tag; if you pin `nuggocto/bunpo` to a commit SHA, also pass
@@ -195,12 +195,15 @@ pinned too.
   the slowest shard's wall time separately from runner queue delay.
 - **Remove any existing sharding.** Drop Playwright's `--shard` flag before
   enabling Bunpō so the suite is not filtered twice.
-- **Busy queues and concurrent pushes (`bunpo plan`).** If another `main` run
-  saves newer timings while one of your shards is still waiting for a runner,
-  the late shard restores a different cache and `verify` fails. To freeze one
-  split for the whole workflow, run `bunpo plan --total M` in an upfront job,
-  upload `.bunpo/plan.json`, and run `bunpo split --index "$INDEX" --plan` on
-  each machine.
+- **Busy queues, re-runs, and concurrent pushes (`bunpo plan`).** If another
+  `main` run saves newer timings while a shard is queued or before you click
+  "Re-run failed jobs", the late shard restores a different cache and `verify`
+  fails. To freeze one split for the whole workflow, add an upfront `plan` job
+  that restores `.bunpo/timings.json`, runs `bunpo plan --total M`, and uploads
+  `.bunpo/plan.json` and `.bunpo/timings.json` with `include-hidden-files: true`;
+  download that artifact into `.bunpo` on each `test` machine and run
+  `bunpo split --index "$INDEX" --plan`, and download the same snapshot in the
+  final job before `bunpo merge`.
 
 ## If something fails
 

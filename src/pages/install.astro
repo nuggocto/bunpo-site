@@ -13,13 +13,13 @@ const linuxInstall = `ARCH=amd64 # or arm64
 curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-linux-$ARCH && \\
 curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS && \\
 sha256sum --ignore-missing -c SHA256SUMS && \\
-chmod +x bunpo-linux-$ARCH && sudo mv bunpo-linux-$ARCH /usr/local/bin/bunpo`;
+chmod +x bunpo-linux-$ARCH && mv bunpo-linux-$ARCH /usr/local/bin/bunpo`;
 
 const macosInstall = `ARCH=arm64 # or amd64 for Intel
 curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-darwin-$ARCH && \\
 curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS && \\
 shasum -a 256 --ignore-missing -c SHA256SUMS && \\
-chmod +x bunpo-darwin-$ARCH && sudo mv bunpo-darwin-$ARCH /usr/local/bin/bunpo`;
+chmod +x bunpo-darwin-$ARCH && mv bunpo-darwin-$ARCH /usr/local/bin/bunpo`;
 
 const windowsInstall = `$arch = "amd64" # or arm64
 $base = "https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}"
@@ -143,7 +143,8 @@ const platforms = [
 				</div>
 
 				<p class="small muted">
-					All release binaries and checksums live on{" "}
+					Prefix <code>mv</code> with <code>sudo</code> on local Linux or macOS machines if{" "}
+					<code>/usr/local/bin</code> requires root. All release binaries and checksums live on{" "}
 					<a
 						href={`https://github.com/nuggocto/bunpo/releases/tag/${LATEST_VERSION}`}
 						target="_blank"

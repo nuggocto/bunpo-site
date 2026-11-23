@@ -200,8 +200,8 @@ jobs:
   if a machine's report is missing.
 - **Only passing `main` runs save timings.** Pull requests read them and never
   overwrite them, and failed `main` runs leave the previous cache intact so
-  "Re-run failed jobs" restores the same split. Each save uses a new cache key,
-  and `restore-keys` picks the newest.
+  re-running a failed shard does not hit timings saved by the same run. Each
+  save uses a new cache key, and `restore-keys` picks the newest.
 
 Change `machine: [0, 1, 2, 3]` to use more or fewer machines. The actions are
 shown by tag; if you pin `nuggocto/bunpo` to a commit SHA, also pass
@@ -224,12 +224,15 @@ pinned too.
   merge and enforce thresholds in the final job.
 - **Remove any existing sharding.** Drop Vitest's `--shard` flag before
   enabling Bunpō so the suite is not filtered twice.
-- **Busy queues and concurrent pushes (`bunpo plan`).** If another `main` run
-  saves newer timings while one of your shards is still waiting for a runner,
-  the late shard restores a different cache and `verify` fails. To freeze one
-  split for the whole workflow, run `bunpo plan --total M` in an upfront job,
-  upload `.bunpo/plan.json`, and run `bunpo split --index "$INDEX" --plan` on
-  each machine.
+- **Busy queues, re-runs, and concurrent pushes (`bunpo plan`).** If another
+  `main` run saves newer timings while a shard is queued or before you click
+  "Re-run failed jobs", the late shard restores a different cache and `verify`
+  fails. To freeze one split for the whole workflow, add an upfront `plan` job
+  that restores `.bunpo/timings.json`, runs `bunpo plan --total M`, and uploads
+  `.bunpo/plan.json` and `.bunpo/timings.json` with `include-hidden-files: true`;
+  download that artifact into `.bunpo` on each `test` machine and run
+  `bunpo split --index "$INDEX" --plan`, and download the same snapshot in the
+  final job before `bunpo merge`.
 
 ## If something fails
 
