@@ -12,8 +12,6 @@ export interface TrialScenario {
 	shortTag: string;
 	subtitle: string;
 	environment: string;
-	baselineSeconds: number;
-	baselineLabel: string;
 	beforeLabel: string;
 	beforeHeadline: string;
 	afterLabel: string;
@@ -38,8 +36,6 @@ export const trials: TrialScenario[] = [
 		shortTag: "pytest · 4 machines · -50% vs count",
 		subtitle: "113 pytest files · 2,777 tests · PostgreSQL 16 · 4 machines",
 		environment: "Local 4-CPU-pinned trial, serial pytest --use-postgres",
-		baselineSeconds: 490.0,
-		baselineLabel: "8m 10s on 1 machine",
 		beforeLabel: "split by count",
 		beforeHeadline: "4m 15s",
 		afterLabel: "split by Bunpō timings",
@@ -74,8 +70,6 @@ export const trials: TrialScenario[] = [
 		shortTag: "pytest · 4 machines · -5% vs count",
 		subtitle: "495 pytest files · 6,469 tests · PostgreSQL 18 · 4 machines",
 		environment: "Local 4-CPU-pinned trial, serial pytest --use-postgres",
-		baselineSeconds: 1529.7,
-		baselineLabel: "25m 30s on 1 machine",
 		beforeLabel: "split by count",
 		beforeHeadline: "6m 36s",
 		afterLabel: "split by Bunpō timings",
@@ -109,8 +103,6 @@ export const trials: TrialScenario[] = [
 		shortTag: "GitHub Actions · 2 unequal runners",
 		subtitle: "68 specs · 232 cases · Docker Compose · 2 self-hosted runners",
 		environment: "Live GitHub Actions (v0.0.5 via nuggocto/bunpo@v0), x64 + ARM64",
-		baselineSeconds: 1152,
-		baselineLabel: "19m 12s job wall on 1 machine",
 		beforeLabel: "slowest job, split by count",
 		beforeHeadline: "8m 46s",
 		afterLabel: "slowest job, Bunpō timings",
@@ -142,8 +134,6 @@ export const trials: TrialScenario[] = [
 		shortTag: "declared benchmark · 1.021 ratio",
 		subtitle: "40 pytest files · 100–900 ms · 4 parallel processes",
 		environment: "Declared benchmark in docs/benchmark.md (pytest setup: 134 ms)",
-		baselineSeconds: 19.04,
-		baselineLabel: "19.04 s summed test time",
 		beforeLabel: "Run 1 · split by count",
 		beforeHeadline: "5.10s slowest (1.056)",
 		afterLabel: "Run 3 · Bunpō timings",
