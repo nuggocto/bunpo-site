@@ -9,5 +9,3 @@
 /brand/*
   Cache-Control: public, max-age=86400
 
-/demo.gif
-  Cache-Control: public, max-age=86400

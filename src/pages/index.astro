@@ -1,27 +1,78 @@
 ---
+import { Code } from "astro:components";
 import { getCollection } from "astro:content";
 import HiveSplitDemo from "../components/HiveSplitDemo.astro";
-import TrialChart from "../components/TrialChart.astro";
-import { LATEST_VERSION } from "../data/releases";
+import InstallLine from "../components/InstallLine.astro";
+import SplitResult from "../components/SplitResult.astro";
+import Terminal from "../components/Terminal.astro";
+import { formatSeconds, type MachineBar, trials } from "../data/benchmarks";
 import Base from "../layouts/Base.astro";
 
 const guides = (await getCollection("guides")).sort((a, b) => a.data.order - b.data.order);
+
+const trial = trials.find((t) => t.id === "majlisna-backend");
+if (!trial) throw new Error("majlisna-backend trial is missing");
+const times = (bars: MachineBar[]) => bars.map((b) => b.seconds);
+const slowest = (bars: MachineBar[]) => Math.max(...times(bars));
+const spread = (bars: MachineBar[]) => (slowest(bars) - Math.min(...times(bars))).toFixed(1);
+const files = trial.afterBars.reduce((sum, b) => sum + b.files, 0);
+
+const workflow = `# on each of 4 machines
+- uses: nuggocto/bunpo@v0
+- run: |
+    find tests -name 'test_*.py' |
+      bunpo split --index "$INDEX" --total "$TOTAL" > mine.txt
+    # run the files in mine.txt and write junit.xml
+    bunpo record --index "$INDEX" junit.xml
+
+# in one final job
+- run: |
+    find tests -name 'test_*.py' | bunpo verify
+    bunpo merge`;
+
+const alternatives = [
+	{
+		name: "jest --shard\nvitest --shard",
+		split: "Equal file counts, ordered by a hash of each path. No timings.",
+		pick: "Your files take about the same time.",
+	},
+	{
+		name: "playwright --shard",
+		split: "Test counts. Splits inside files with fullyParallel. No timings.",
+		pick: "Your tests take about the same time.",
+	},
+	{
+		name: "pytest-split",
+		split: "Recorded time of each test, from a file kept in your repo.",
+		pick: "You only use pytest, or one file is too slow to stay whole.",
+	},
+	{
+		name: "Knapsack Pro",
+		split: "Recorded times through its API. Machines pull files from a queue.",
+		pick: "Your machines differ in speed or start late, and a paid service is fine (free for non-commercial open source).",
+	},
+	{
+		name: "Bunpō",
+		split: "Recorded time of each file, from your CI cache. Checks the assignment.",
+		pick: "You want one free tool for several runners, with no server.",
+		self: true,
+	},
+];
 ---
 
-<Base title="Bunpō (分蜂) — Balance CI test suites by timing, verify every file once">
+<Base title="Bunpō (分蜂) — Split CI tests by recorded time, verify every file once">
 	<section class="hero">
 		<div>
 			<span class="eyebrow">分蜂 · the bees dividing their hive</span>
-			<h1>Balance CI test suites by timing and verify every assignment.</h1>
+			<h1>Split your tests so CI machines finish together.</h1>
 			<p class="lead">
-				Split tests by name and one machine gets the slow files while the others sit idle.
-				Bunpō remembers how long each file took, deals them out longest first, and fails the
-				build if a stale cache leaves a file unassigned or duplicated. It is one static binary
-				with no server. Timings live in your own CI cache.
+				Bunpō balances test files by recorded time, and fails the build if a file is assigned
+				twice or not at all. It is one static binary with no server.
 			</p>
+			<InstallLine />
 			<div class="actions">
-				<a href="/install" class="btn">Install {LATEST_VERSION}</a>
-				<a href="/guides" class="btn btn-ghost">Read a runner guide</a>
+				<a href="/guides" class="btn">Set up your runner</a>
+				<a href="/install" class="btn btn-ghost">Other installs</a>
 			</div>
 		</div>
 		<figure class="hero-art">
@@ -38,64 +89,66 @@ const guides = (await getCollection("guides")).sort((a, b) => a.data.order - b.d
 		</figure>
 	</section>
 
-	<dl class="facts" aria-label="Measured gains and facts">
-		<div class="fact">
-			<dt>Postgres suite (4 machines)</dt>
-			<dd class="gain-positive">25m 30s → 6m 16s (4.0x)</dd>
+	<div class="gains">
+		<div class="gain">
+			<p class="gain-title">Half the wait</p>
+			<p class="gain-data">
+				{formatSeconds(slowest(trial.beforeBars))} → {formatSeconds(slowest(trial.afterBars))}
+			</p>
+			<p class="gain-note">until the slowest machine finishes</p>
 		</div>
-		<div class="fact">
-			<dt>Playwright CI (2 runners)</dt>
-			<dd class="gain-positive">19m 47s → 9m 58s (-49.6%)</dd>
+		<div class="gain">
+			<p class="gain-title">7s apart, not 3 min</p>
+			<p class="gain-data">{spread(trial.beforeBars)}s → {spread(trial.afterBars)}s</p>
+			<p class="gain-note">between the first and last machine to finish</p>
 		</div>
-		<div class="fact">
-			<dt>binary</dt>
-			<dd>3.2 MiB, Go stdlib only</dd>
-		</div>
-		<div class="fact">
-			<dt>hosting</dt>
-			<dd>None, uses your CI cache</dd>
-		</div>
-	</dl>
+		<p class="gain-scope">
+			Best of 7 suites tried: {files} pytest files on the same {trial.afterBars.length} machines, vs.
+			splitting by count. <a href="/benchmarks">See&nbsp;all&nbsp;seven</a>
+		</p>
+	</div>
 
-	<section class="band" id="benchmarks">
-		<div class="band-head">
-			<div class="band-label">
-				<strong>Before &amp; after</strong>
-				<span>Measured time saved</span>
-			</div>
-			<div>
-				<h2>Cut 19 minutes off a Postgres suite, and 2 minutes off a count-based split.</h2>
-				<p>
-					Measured machine times from two production repositories (local 4-CPU trials and a
-					live GitHub Actions Playwright run on <code>v0.0.5</code>) alongside the declared
-					40-file benchmark. Switch suites to compare before and after on each machine.
-				</p>
-				<TrialChart />
-				<p class="small" style="margin-top: 1rem;">
-					<a href="/benchmarks">Read all benchmark tables, tight splits, and indivisible-file limits →</a>
-				</p>
-			</div>
-		</div>
-	</section>
+	<ul class="facts" aria-label="Key facts">
+		<li>5 tested guides</li>
+		<li>3.2 MiB binary</li>
+		<li>no server, timings in your CI cache</li>
+	</ul>
 
 	<section class="band" id="how-it-works">
 		<div class="band-head">
 			<div class="band-label">
 				<strong>How it works</strong>
-				<span>Split, record, verify, merge</span>
+				<span>Longest file first</span>
 			</div>
 			<div>
-				<h2>Deal the slowest files first, then verify every machine saw the same split.</h2>
+				<h2>Deal the slowest files first, then check the deal.</h2>
 				<p>
-					Take six files that run in 9, 7, 6, 5, 4, and 3 minutes across two machines.
-					Splitting alphabetically stacks the three heaviest files onto machine 0 (22 minutes)
-					while machine 1 finishes in 12. Bunpō deals longest first to whichever machine has
-					the smallest load: 9 + 5 + 3 and 7 + 6 + 4, 17 minutes each, cutting 5 minutes off
-					the build. Each machine writes its share and a SHA-256 digest of its inputs into a
-					manifest, and <code>bunpo verify</code> checks every manifest at the end so a stale
-					cache cannot drop or double-run a file.
+					Six files across two machines. By name, machine 0 gets the three slowest files. Bunpō
+					gives each file, longest first, to the machine with the smallest load. If one
+					machine restores old timings, <code>bunpo verify</code> catches the mismatch.
 				</p>
 				<HiveSplitDemo />
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="benchmarks">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Result</strong>
+				<span>Measured on a production suite</span>
+			</div>
+			<div>
+				<h2>Half the time of a count split, on the same four machines.</h2>
+				<p>
+					A build waits for its slowest machine. Counting files put one slow WebSocket file on
+					a machine with 27 others. Bunpō gave that file its own machine.
+				</p>
+				<SplitResult />
+				<p class="small">
+					Suites with evenly sized files gain less, and some gain nothing.{" "}
+					<a href="/benchmarks">See every suite&nbsp;→</a>
+				</p>
 			</div>
 		</div>
 	</section>
@@ -104,48 +157,49 @@ const guides = (await getCollection("guides")).sort((a, b) => a.data.order - b.d
 		<div class="band-head">
 			<div class="band-label">
 				<strong>In your pipeline</strong>
-				<span>Four plain commands</span>
+				<span>Four commands</span>
 			</div>
 			<div>
-				<h2>Standard output carries file lists. Messages go to standard error.</h2>
+				<h2>Your runner still runs the tests.</h2>
+				<div class="code-frame">
+					<div class="code-bar">
+						<span>Outline · the guides have the full workflow</span>
+					</div>
+					<Code code={workflow} lang="yaml" theme="github-light" />
+				</div>
 				<ol class="steps-list">
 					<li>
 						<span class="step-cmd">split</span>
 						<div>
-							<strong><code>bunpo split --index N --total M</code></strong> reads the test
-							list from standard input, prints machine N's share, and writes{" "}
-							<code>.bunpo/manifest-N.json</code> only after the full list is written.
-						</div>
-					</li>
-					<li>
-						<span class="step-cmd">run</span>
-						<div>
-							<strong>Your test runner</strong> executes those exact files and writes a
-							JUnit XML report or a two-column timing file. Empty shards skip the runner
-							so it cannot run the whole suite by accident.
+							prints this machine's files and writes a manifest with a digest of the list and
+							timings it used.
 						</div>
 					</li>
 					<li>
 						<span class="step-cmd">record</span>
 						<div>
-							<strong><code>bunpo record --index N report.xml</code></strong> sums exact
-							case durations per file, checks the report against the manifest, and refuses
-							unassigned files. Files with failures stay seen without recording a bad time.
+							reads your JUnit report and keeps each file's time. A failed file never records a
+							bad time.
 						</div>
 					</li>
 					<li>
 						<span class="step-cmd">verify</span>
 						<div>
-							<strong><code>bunpo verify</code> and <code>bunpo merge</code></strong> run
-							in a final job. <code>verify</code> proves every file was assigned once from
-							the same inputs; <code>merge</code> updates the rolling 5-run median in{" "}
-							<code>timings.json</code> and drops files unseen for 30 runs.
+							fails unless every machine split the same input and each file was assigned exactly
+							once.
+						</div>
+					</li>
+					<li>
+						<span class="step-cmd">merge</span>
+						<div>
+							updates <code>timings.json</code> with each file's last five times. Splits use their
+							median.
 						</div>
 					</li>
 				</ol>
-				<p class="small muted" style="margin-top: 1rem;">
-					<code>verify</code> checks assignments, not execution. Your workflow still checks
-					runner exit statuses and expected reports; every guide below wires up both.
+				<p class="small muted steps-note">
+					<code>verify</code> checks assignments, not execution. Your workflow still checks that
+					each runner passed, and every guide does both.
 				</p>
 			</div>
 		</div>
@@ -155,24 +209,54 @@ const guides = (await getCollection("guides")).sort((a, b) => a.data.order - b.d
 		<div class="band-head">
 			<div class="band-label">
 				<strong>In the terminal</strong>
-				<span>Exit 0, 1, or 2</span>
+				<span>Output from v0.0.6</span>
 			</div>
 			<div>
-				<h2>See split, record, merge, and verify catching a stale timing cache.</h2>
+				<h2>What it prints, and how it fails.</h2>
 				<p>
-					In GitHub Actions, warnings and failures become workflow annotations automatically.
-					Exit status is <code>0</code> on success, <code>1</code> when a check fails, and{" "}
-					<code>2</code> on bad input or flags.
+					File lists go to standard output and messages to standard error. Exit status is{" "}
+					<code>0</code> on success, <code>1</code> when a check fails, and <code>2</code> on bad
+					input or flags. The 12 files and their times are made up; the output is not.
 				</p>
-				<div class="demo-frame">
-					<img
-						src="/demo.gif"
-						alt="Terminal recording of bunpo split, record, merge, and verify catching a stale timing cache on machine 2"
-						width="1160"
-						height="640"
-						loading="lazy"
-					/>
+				<Terminal />
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="compare">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Alternatives</strong>
+				<span>When to skip it</span>
+			</div>
+			<div>
+				<h2>You may not need Bunpō.</h2>
+				<div class="table-wrap">
+					<table class="compare">
+						<thead>
+							<tr>
+								<th>Tool</th>
+								<th>Splits by</th>
+								<th>Pick it when</th>
+							</tr>
+						</thead>
+						<tbody>
+							{
+								alternatives.map((a) => (
+									<tr class:list={{ "compare-self": a.self }}>
+										<th scope="row">{a.name}</th>
+										<td data-label="Splits by">{a.split}</td>
+										<td data-label="Pick it when">{a.pick}</td>
+									</tr>
+								))
+							}
+						</tbody>
+					</table>
 				</div>
+				<p class="small muted">
+					Bunpō splits whole files, so one file slower than the average machine load sets the
+					floor. It warns you when that happens.
+				</p>
 			</div>
 		</div>
 	</section>
@@ -184,12 +268,8 @@ const guides = (await getCollection("guides")).sort((a, b) => a.data.order - b.d
 				<span>Tested on real runners</span>
 			</div>
 			<div>
-				<h2>Complete GitHub Actions workflows for five runners.</h2>
-				<p>
-					Each guide is tested against the real runner with decoy files and glob characters,
-					because runners like Jest, Vitest, and Playwright treat plain file arguments as
-					patterns unless you lock them down.
-				</p>
+				<h2>Pick your runner.</h2>
+				<p>Each guide is a complete GitHub Actions workflow you can copy.</p>
 				<ul class="runner-list">
 					{
 						guides.map((g) => (
@@ -205,6 +285,11 @@ const guides = (await getCollection("guides")).sort((a, b) => a.data.order - b.d
 						))
 					}
 				</ul>
+				<p class="other-ci">
+					<strong>Not on GitHub Actions?</strong> The binary does not depend on it, so it also runs
+					on GitLab CI, Buildkite, Woodpecker CI, and Forgejo or Gitea Actions. Those do not have
+					a copy-paste workflow yet. <a href="/guides#other-ci">What to wire up →</a>
+				</p>
 			</div>
 		</div>
 	</section>

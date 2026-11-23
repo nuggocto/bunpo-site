@@ -1,0 +1,49 @@
+---
+import { formatSeconds, trials } from "../data/benchmarks";
+
+/* The homepage result: one suite, same four machines, by count versus by recorded time. */
+const trial = trials.find((t) => t.id === "majlisna-backend");
+if (!trial) throw new Error("majlisna-backend trial is missing");
+
+const groups = [
+	{ id: "before", title: "Split by count", bars: trial.beforeBars },
+	{ id: "after", title: "Split by Bunpō", bars: trial.afterBars },
+].map((g) => ({ ...g, slowest: Math.max(...g.bars.map((b) => b.seconds)) }));
+const max = Math.max(...groups.map((g) => g.slowest));
+---
+
+<figure class="result">
+	{
+		groups.map((g) => (
+			<div class="result-group">
+				<div class="result-head">
+					<span>{g.title}</span>
+					<strong>done in {formatSeconds(g.slowest)}</strong>
+				</div>
+				{g.bars.map((b) => (
+					<div
+						class="result-row"
+						title={`${b.label}: ${b.files} ${b.files === 1 ? "file" : "files"}, ${b.seconds} s`}
+					>
+						<span class="result-label">{b.label}</span>
+						<svg class="result-bar" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true">
+							<rect
+								x="0"
+								y="0"
+								width={((b.seconds / max) * 200).toFixed(1)}
+								height="14"
+								fill={g.id === "after" ? "#1F7A5A" : b.seconds === g.slowest ? "#8C5A2B" : "#CDBFAA"}
+							/>
+						</svg>
+						<span class="result-value">{formatSeconds(b.seconds)}</span>
+					</div>
+				))}
+			</div>
+		))
+	}
+	<figcaption class="small muted">
+		Pytest and Postgres suite, 113 files and 2,777 tests, test command only. Each machine's share ran
+		alone on one host, pinned to 4 CPUs. A second timed run finished in 2m 13s,
+		with machines 11s apart.
+	</figcaption>
+</figure>

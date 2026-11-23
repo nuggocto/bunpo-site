@@ -37,7 +37,7 @@ import Base from "../layouts/Base.astro";
 			<div>
 				<h2>Playwright E2E on two self-hosted runners (v0.0.5)</h2>
 				<p>
-					An outside maintainer wired <code>nuggocto/bunpo@v0</code> into{" "}
+					An outside maintainer and their coding agents wired <code>nuggocto/bunpo@v0</code> into{" "}
 					<code>.github/workflows/e2e.yml</code> from the Playwright guide alone: 68 specs,
 					232 cases, Docker Compose per runner, across one x64 runner and one ARM64 runner.
 				</p>
@@ -62,7 +62,7 @@ import Base from "../layouts/Base.astro";
 								<td>Cold (2 machines, by count)</td>
 								<td>8m 46s</td>
 								<td>17s</td>
-								<td>9m 58s (49.6% shorter)</td>
+								<td>9m 58s</td>
 							</tr>
 							<tr>
 								<td>Warm (2 machines, timed 4m42s / 4m42s)</td>
@@ -74,7 +74,8 @@ import Base from "../layouts/Base.astro";
 					</table>
 				</div>
 				<p class="small muted">
-					In the warm run, Bunpō predicted 4m42s on both shards; actual Playwright wall was
+					The cold run had no timings, so its drop from 19m 47s comes from adding a second,
+					faster machine. In the warm run, Bunpō predicted 4m42s on both shards; actual Playwright wall was
 					3m 32s on x64 vs 6m 29s on ARM64, and another CI job queued x64 for 13m 09s. Static
 					file-level splitting assumes similar machines starting together.
 				</p>
@@ -96,6 +97,13 @@ import Base from "../layouts/Base.astro";
 					dependency install). Every round ran the exact same test count as baseline with{" "}
 					<code>verify</code> and <code>merge</code> exiting 0.
 				</p>
+				<p>
+					Bunpō's own effect is the <em>Timed vs count</em> column. It is large when a few
+					slow files dominate and small when files are already even. On LaTabdhir's SQLite
+					suite, an existing <code>crc32</code> hash of test IDs was about as fast as Bunpō
+					(~59s after rerunning two
+					noisy shards).
+				</p>
 				<div class="table-wrap">
 					<table>
 						<thead>
@@ -105,7 +113,8 @@ import Base from "../layouts/Base.astro";
 								<th>1 machine</th>
 								<th>4 machines (count)</th>
 								<th>4 machines (timed R2 / R3)</th>
-								<th>Speedup</th>
+								<th>Timed vs count</th>
+								<th>Timed vs 1 machine</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -115,6 +124,7 @@ import Base from "../layouts/Base.astro";
 								<td>25m 30s</td>
 								<td>6m 36s (54.5s spread)</td>
 								<td>6m 16s / 6m 19s (5.4s / 10.3s)</td>
+								<td>4–5% less</td>
 								<td>4.0x</td>
 							</tr>
 							<tr>
@@ -123,6 +133,7 @@ import Base from "../layouts/Base.astro";
 								<td>3m 42s</td>
 								<td>1m 27s (20.3s spread)</td>
 								<td>1m 01s / 1m 03s (2.6s / 5.7s)</td>
+								<td>27–30% less</td>
 								<td>3.6x</td>
 							</tr>
 							<tr>
@@ -131,6 +142,7 @@ import Base from "../layouts/Base.astro";
 								<td>2m 03s</td>
 								<td>37.6s (5.8s spread)</td>
 								<td>34.3s / 36.6s (1.7s / 2.4s)</td>
+								<td>3–9% less, none vs a count rerun (33.7s)</td>
 								<td>3.4x</td>
 							</tr>
 							<tr>
@@ -139,6 +151,7 @@ import Base from "../layouts/Base.astro";
 								<td>5m 09s</td>
 								<td>3m 09s (113.9s spread, 1 flake)</td>
 								<td>1m 34s–1m 43s clean (2m 45s / 2m 24s w/ flake)</td>
+								<td>not comparable (flaky retries)</td>
 								<td>~3.0x clean</td>
 							</tr>
 							<tr>
@@ -147,6 +160,7 @@ import Base from "../layouts/Base.astro";
 								<td>8m 10s</td>
 								<td>4m 15s (179.5s spread)</td>
 								<td>2m 08s / 2m 13s (7.3s / 11.1s)</td>
+								<td>48–50% less</td>
 								<td>3.8x</td>
 							</tr>
 							<tr>
@@ -155,6 +169,7 @@ import Base from "../layouts/Base.astro";
 								<td>6m 14s</td>
 								<td>3m 28s (140.6s spread)</td>
 								<td>3m 28s (floored by 190s WS spec)</td>
+								<td>none</td>
 								<td>1.8x</td>
 							</tr>
 							<tr>
@@ -163,6 +178,7 @@ import Base from "../layouts/Base.astro";
 								<td>24.7s</td>
 								<td>7.8s (1.08s spread)</td>
 								<td>7.8s / 7.7s (0.56s / 0.32s)</td>
+								<td>none</td>
 								<td>3.2x</td>
 							</tr>
 						</tbody>
@@ -266,7 +282,7 @@ import Base from "../layouts/Base.astro";
 							<tr>
 								<td>Release binary size (<code>v0.0.6</code>)</td>
 								<td>Static binary, Go stdlib only (<code>linux/amd64</code>)</td>
-								<td>3.2 MiB (3.1–3.5 MB across targets)</td>
+								<td>3.2 MiB (3.0–3.3 MiB across targets)</td>
 							</tr>
 							<tr>
 								<td>Input &amp; report caps</td>

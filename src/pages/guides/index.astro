@@ -84,7 +84,7 @@ const guides = (await getCollection("guides")).sort((a, b) => a.data.order - b.d
 			passing file (and <code>&lt;path&gt; -</code> for a failed file) and pass{" "}
 			<code>bunpo record --format lines</code>.
 		</p>
-		<p class="small muted">
+		<p class="small muted" id="other-ci">
 			Using another CI (GitLab CI, Woodpecker CI, Forgejo/Gitea Actions, Buildkite, or your
 			own runners)? The CLI has no GitHub Actions dependency. Download the binary from{" "}
 			<a href="/install">/install</a>, pass 0-based <code>--index</code> and{" "}

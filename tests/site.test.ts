@@ -12,14 +12,14 @@ describe("design constraints (global.css)", () => {
 		expect(fontVars.length).toBeLessThanOrEqual(3);
 	});
 
-	test("uses at most 3 font sizes across the stylesheet", () => {
+	test("uses at most 4 font sizes across the stylesheet", () => {
 		const sizeVars = [...css.matchAll(/--fs-[a-z-]+:/g)];
-		expect(sizeVars.length).toBeLessThanOrEqual(3);
+		expect(sizeVars.length).toBeLessThanOrEqual(4);
 
-		// Every font-size declaration outside :root and html base (16px) must reference one of the 3 --fs-* tokens.
+		// Every font-size declaration outside :root and html base (16px) must reference one of the 4 --fs-* tokens.
 		const declarations = [...css.matchAll(/font-size:\s*([^;]+);/g)].map((m) => m[1].trim());
 		for (const val of declarations) {
-			const allowed = val === "16px" || /^var\(--fs-(display|body|small)\)$/.test(val);
+			const allowed = val === "16px" || /^var\(--fs-(display|title|body|small)\)$/.test(val);
 			expect(allowed, `unexpected font-size declaration: ${val}`).toBe(true);
 		}
 	});
@@ -96,6 +96,37 @@ describe("site content & data integrity", () => {
 		}
 	});
 
+	test("headline gains compare against a count split and match the bars", () => {
+		const slowest = (bars: { seconds: number }[]) => Math.max(...bars.map((b) => b.seconds));
+		let checked = 0;
+		for (const t of trials) {
+			if (t.gainLabel !== "saved vs count") continue;
+			const before = slowest(t.beforeBars);
+			const after = slowest(t.afterBars);
+			const percent = Math.round((1 - after / before) * 100);
+			expect(t.beforeHeadline, t.id).toBe(formatSeconds(before));
+			expect(t.afterHeadline, t.id).toBe(formatSeconds(after));
+			expect(t.gainHeadline, t.id).toContain(`${percent}% less`);
+			expect(t.gainHeadline, t.id).toStartWith(
+				formatSeconds(before - after)
+					.replace(/^0m /, "")
+					.replace(/\.\d+s$/, "s"),
+			);
+			checked++;
+		}
+		expect(checked).toBe(3);
+	});
+
+	test("homepage result claims match the trial: half the wait, 7s apart instead of 3 min", () => {
+		const trial = trials.find((t) => t.id === "majlisna-backend");
+		const before = trial?.beforeBars.map((b) => b.seconds) ?? [];
+		const after = trial?.afterBars.map((b) => b.seconds) ?? [];
+		const spread = (times: number[]) => Math.max(...times) - Math.min(...times);
+		expect(Math.max(...after) / Math.max(...before)).toBeCloseTo(0.5, 2);
+		expect(Math.round(spread(after))).toBe(7);
+		expect(Math.round(spread(before) / 60)).toBe(3);
+	});
+
 	test("latest release matches changelog top entry", () => {
 		expect(releases[0]?.version).toBe(LATEST_VERSION);
 	});
@@ -119,7 +150,9 @@ describe("built static output (when dist/ exists)", () => {
 			"dist/changelog/index.html",
 			"dist/_headers",
 			"dist/favicon.png",
-			"dist/demo.gif",
+			"dist/robots.txt",
+			"dist/sitemap.xml",
+			"dist/brand/og.png",
 			"dist/brand/mitsu.webp",
 			"dist/brand/mitsu.png",
 			"dist/brand/mitsu-404.webp",

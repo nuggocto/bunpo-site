@@ -30,7 +30,7 @@ const allGuides = (await getCollection("guides")).sort((a, b) => a.data.order - 
 				<a
 					href={`/guides/${g.id}`}
 					class="tab-btn"
-					aria-selected={g.id === entry.id ? "true" : "false"}
+					aria-current={g.id === entry.id ? "page" : undefined}
 				>
 					{g.data.title}
 				</a>

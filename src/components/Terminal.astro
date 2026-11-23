@@ -1,0 +1,61 @@
+---
+/* Copied from bunpo v0.0.6 running the setup in bunpo's docs/demo.tape. */
+interface Line {
+	kind: "cmd" | "out" | "log" | "ok" | "err" | "note";
+	text: string;
+}
+
+const steps: Line[][] = [
+	[
+		{ kind: "cmd", text: "find tests -name 'test_*.py' | bunpo split --index 0 --total 4" },
+		{
+			kind: "log",
+			text: "bunpo: predicted machine loads from 2m56s to 2m56s, average 2m56s; longest file tests/test_pay.py at 1m18s\nbunpo: machine 0 of 4 gets 3 of 12 tests, predicted 2m56s",
+		},
+		{ kind: "out", text: "tests/test_health.py\ntests/test_pay.py\ntests/test_webhooks.py" },
+	],
+	[
+		{ kind: "cmd", text: "bunpo record --index 0 junit-0.xml" },
+		{ kind: "log", text: "bunpo: recorded 3 files for machine 0" },
+	],
+	[
+		{ kind: "cmd", text: "find tests -name 'test_*.py' | bunpo verify" },
+		{
+			kind: "ok",
+			text: "bunpo: assignment verified: 12 tests across 4 machines, each assigned exactly once, all split from the same input and timings (digest d148e75c6fd4…)",
+		},
+		{
+			kind: "log",
+			text: "bunpo: this checks what each machine was asked to run, not what ran; check each runner's result and report separately",
+		},
+	],
+	[
+		{ kind: "cmd", text: "bunpo merge" },
+		{
+			kind: "log",
+			text: "bunpo: merged 4 run reports into timings.json (run 5): 12 files seen, 12 timed",
+		},
+	],
+	[
+		{ kind: "note", text: "# What if machine 2 restored a stale timing cache?" },
+		{ kind: "cmd", text: "find tests -name 'test_*.py' | bunpo verify --dir .bunpo-stale" },
+		{
+			kind: "err",
+			text: "bunpo verify: error: assignment check failed:\n  - machine 2 split a different input or used different timings than the other machines: d148e75c6fd4… on machines 0, 1, 3; ad349cc306c1… on machine 2\n  - 1 test assigned to more than one machine: tests/test_health.py (machines 0, 2)\n  - 1 test in the input but assigned to no machine: tests/test_users.py",
+		},
+		{ kind: "note", text: "# exit status 1" },
+	],
+];
+---
+
+<div class="terminal">
+	{
+		steps.map((lines) => (
+			<div class="terminal-step">
+				{lines.map((l) => (
+					<div class={`terminal-line terminal-${l.kind}`}>{l.text}</div>
+				))}
+			</div>
+		))
+	}
+</div>
