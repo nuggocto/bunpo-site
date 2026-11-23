@@ -6,9 +6,23 @@ export interface Release {
 	notes: string[];
 }
 
-export const LATEST_VERSION = "v0.0.6";
+export const LATEST_VERSION = "v0.0.7";
 
 export const releases: Release[] = [
+	{
+		version: "v0.0.7",
+		date: "2026-11-23",
+		summary:
+			"Gated release promotion, hardened Action installer, Playwright anchored regex selection, and cleaner re-runs.",
+		url: "https://github.com/nuggocto/bunpo/releases/tag/v0.0.7",
+		notes: [
+			"Publish releases as prereleases until cross-OS smoke checks pass, then promote stable tags and move @v0.",
+			"Forward github.token only on github.com and restrict @v0 major-tag lookup to stable vX.Y.Z tags.",
+			"Delete leftover report-<index>.json at the start of bunpo record and format extreme totals without time.Duration overflow.",
+			"Switch the Playwright guide from --test-list to case-sensitive anchored regex arguments so filenames starting with '[' work, and widen pytest/Playwright find patterns to match runner defaults including symlinks.",
+			"Gate cache saves on passing test runs in all five runner guides and document the full bunpo plan workflow for busy queues.",
+		],
+	},
 	{
 		version: "v0.0.6",
 		date: "2026-11-22",
