@@ -1,22 +1,61 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Bunpō — Mitsu over a hexagon">
-  <!-- Single hexagon cell -->
-  <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="#F6ECD9" stroke="#2B1F16" stroke-width="2.5" stroke-linejoin="round"/>
-  <!-- Mint wing tips peeking behind -->
-  <ellipse cx="17" cy="30" rx="7" ry="4.5" transform="rotate(-24 17 30)" fill="#43A581" stroke="#2B1F16" stroke-width="2"/>
-  <ellipse cx="47" cy="30" rx="7" ry="4.5" transform="rotate(24 47 30)" fill="#43A581" stroke="#2B1F16" stroke-width="2"/>
-  <!-- Antennae -->
-  <path d="M27 21 C25 15 22 14 21 15" stroke="#2B1F16" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="20.5" cy="15" r="1.8" fill="#2B1F16"/>
-  <path d="M37 21 C39 15 42 14 43 15" stroke="#2B1F16" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="43.5" cy="15" r="1.8" fill="#2B1F16"/>
-  <!-- Round honey-brown head -->
-  <circle cx="32" cy="35" r="15" fill="#8C5A2B" stroke="#2B1F16" stroke-width="2.5"/>
-  <!-- Warm cream face mask -->
-  <path d="M20.5 34.5 C20.5 27.5 26 24.5 32 28 C38 24.5 43.5 27.5 43.5 34.5 C43.5 42 38.5 46.5 32 46.5 C25.5 46.5 20.5 42 20.5 34.5 Z" fill="#F6ECD9"/>
-  <!-- Eyes and calm smile -->
-  <circle cx="27.2" cy="35.5" r="2" fill="#2B1F16"/>
-  <circle cx="36.8" cy="35.5" r="2" fill="#2B1F16"/>
-  <path d="M29.6 39.6 Q32 41.8 34.4 39.6" stroke="#2B1F16" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <!-- Small amber pollen accent at bottom vertex -->
-  <circle cx="32" cy="54" r="2.2" fill="#D99B38"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Bunpō — Mitsu over a hexagon in watercolor and ink">
+  <defs>
+    <radialGradient id="hexWash" cx="42%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="#FDF8EE" stop-opacity="0.95"/>
+      <stop offset="68%" stop-color="#F3E4C6" stop-opacity="0.88"/>
+      <stop offset="100%" stop-color="#E7CFA4" stop-opacity="0.72"/>
+    </radialGradient>
+    <radialGradient id="honeyWash" cx="38%" cy="32%" r="68%">
+      <stop offset="0%" stop-color="#C88D48" stop-opacity="0.92"/>
+      <stop offset="62%" stop-color="#9A632C" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#75471D" stop-opacity="0.85"/>
+    </radialGradient>
+    <radialGradient id="mintWash" cx="45%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#BCE6D4" stop-opacity="0.88"/>
+      <stop offset="70%" stop-color="#7BC5A8" stop-opacity="0.78"/>
+      <stop offset="100%" stop-color="#53A385" stop-opacity="0.65"/>
+    </radialGradient>
+    <radialGradient id="amberStar" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#F5C95B" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#CC8A24" stop-opacity="0.82"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Watercolor wash slightly offset inside hand-drawn hexagon -->
+  <path d="M32.4 5.8 C40 10.2 48.2 14.4 55.2 18.8 C55.6 28 55.1 37.2 54.8 45.6 C47.6 50 39.8 54.4 31.8 58.6 C24.2 54.1 16.5 49.8 9.2 45.2 C8.7 36.4 9.1 27.6 9.5 18.5 C16.9 14.1 24.8 9.9 32.4 5.8 Z" fill="url(#hexWash)"/>
+
+  <!-- Delicate fountain-pen double-sketched hexagon outline -->
+  <path d="M31.9 4.7 C39.8 9.2 48.1 13.7 55.8 18.3 C56.1 27.4 55.7 36.8 55.4 45.8 C47.8 50.4 40 54.9 32.1 59.3 C24.1 54.8 16.2 50.2 8.5 45.6 C8.1 36.6 8.6 27.2 8.9 18.1 C16.6 13.5 24.4 9 31.9 4.7 Z" stroke="#3B2719" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M33.2 5.4 C40.5 9.7 48.5 14.2 54.9 18.2" stroke="#3B2719" stroke-width="0.7" stroke-opacity="0.45" stroke-linecap="round"/>
+  <path d="M55.1 44.8 C47.9 49.3 40.4 53.7 32.8 58.1" stroke="#3B2719" stroke-width="0.7" stroke-opacity="0.4" stroke-linecap="round"/>
+
+  <!-- Translucent pale mint watercolor wings -->
+  <path d="M22.5 29.8 C17.5 24.5 11.2 25.4 10.5 29.2 C9.9 32.8 14.8 35.8 21.8 34.4 Z" fill="url(#mintWash)" stroke="#3B2719" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13.5 29.5 C15.8 29.8 18.2 30.8 20.1 31.8" stroke="#3B2719" stroke-width="0.7" stroke-opacity="0.45" stroke-linecap="round"/>
+  <path d="M41.5 29.8 C46.5 24.5 52.8 25.4 53.5 29.2 C54.1 32.8 49.2 35.8 42.2 34.4 Z" fill="url(#mintWash)" stroke="#3B2719" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M50.5 29.5 C48.2 29.8 45.8 30.8 43.9 31.8" stroke="#3B2719" stroke-width="0.7" stroke-opacity="0.45" stroke-linecap="round"/>
+
+  <!-- Delicate curved sepia ink antennae -->
+  <path d="M27.4 22.3 C25.8 17.4 23.2 14.6 21.3 15.2" stroke="#3B2719" stroke-width="1.45" stroke-linecap="round"/>
+  <circle cx="20.8" cy="15.3" r="1.45" fill="#3B2719"/>
+  <path d="M36.7 22.2 C38.5 17.2 41.2 14.5 43.1 15.1" stroke="#3B2719" stroke-width="1.45" stroke-linecap="round"/>
+  <circle cx="43.5" cy="15.3" r="1.45" fill="#3B2719"/>
+
+  <!-- Round honey-brown watercolor head (opaque cream undercoat prevents wing bleed) -->
+  <path d="M32 21.2 C40.4 21.2 46.3 27.1 46.1 35.1 C45.9 42.9 39.8 48.8 32 48.8 C24.1 48.8 18 43 17.9 35.2 C17.8 27.1 23.7 21.2 32 21.2 Z" fill="#FDF8EE"/>
+  <path d="M32 21.2 C40.4 21.2 46.3 27.1 46.1 35.1 C45.9 42.9 39.8 48.8 32 48.8 C24.1 48.8 18 43 17.9 35.2 C17.8 27.1 23.7 21.2 32 21.2 Z" fill="url(#honeyWash)" stroke="#3B2719" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Soft cream heart-shaped face wash -->
+  <path d="M21.4 35.2 C21.3 29.1 26.2 26.2 32 29.4 C37.8 26.2 42.7 29.1 42.6 35.2 C42.5 41.7 38 46.1 32 46.1 C26 46.1 21.5 41.7 21.4 35.2 Z" fill="#FBF4E6" fill-opacity="0.94"/>
+  <!-- Gentle rosy-amber blush dots -->
+  <ellipse cx="24.8" cy="38.2" rx="1.7" ry="1.1" fill="#E39D6B" fill-opacity="0.38"/>
+  <ellipse cx="39.2" cy="38.2" rx="1.7" ry="1.1" fill="#E39D6B" fill-opacity="0.38"/>
+
+  <!-- Simple poetic Saint-Exupéry ink dot eyes and gentle smile -->
+  <circle cx="27.4" cy="35.6" r="1.6" fill="#2A1B11"/>
+  <circle cx="36.6" cy="35.6" r="1.6" fill="#2A1B11"/>
+  <path d="M29.8 39.2 C31 40.6 33 40.6 34.2 39.2" stroke="#2A1B11" stroke-width="1.45" stroke-linecap="round"/>
+
+  <!-- Tiny hand-drawn golden Saint-Exupéry star below Mitsu -->
+  <path d="M32 51.3 L32.7 53.1 L34.6 53.6 L32.7 54.1 L32 55.9 L31.3 54.1 L29.4 53.6 L31.3 53.1 Z" fill="url(#amberStar)" stroke="#3B2719" stroke-width="0.65" stroke-linejoin="round"/>
 </svg>

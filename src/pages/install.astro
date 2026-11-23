@@ -1,0 +1,211 @@
+---
+import CopyBlock from "../components/CopyBlock.astro";
+import { LATEST_VERSION } from "../data/releases";
+import Base from "../layouts/Base.astro";
+
+const actionBasic = `- uses: nuggocto/bunpo@v0`;
+
+const actionPinned = `- uses: nuggocto/bunpo@v0
+  with:
+    version: ${LATEST_VERSION}`;
+
+const linuxInstall = `ARCH=amd64 # or arm64
+curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-linux-$ARCH
+curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS
+sha256sum --ignore-missing -c SHA256SUMS
+chmod +x bunpo-linux-$ARCH && mv bunpo-linux-$ARCH /usr/local/bin/bunpo`;
+
+const macosInstall = `ARCH=arm64 # or amd64 for Intel
+curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-darwin-$ARCH
+curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS
+shasum -a 256 --ignore-missing -c SHA256SUMS
+chmod +x bunpo-darwin-$ARCH && mv bunpo-darwin-$ARCH /usr/local/bin/bunpo`;
+
+const windowsInstall = `$arch = "amd64" # or arm64
+$base = "https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}"
+Invoke-WebRequest "$base/bunpo-windows-$arch.exe" -OutFile "bunpo-windows-$arch.exe"
+Invoke-WebRequest "$base/SHA256SUMS" -OutFile "SHA256SUMS"
+$expected = (Select-String "bunpo-windows-$arch.exe" SHA256SUMS).Line.Split()[0]
+$actual = (Get-FileHash "bunpo-windows-$arch.exe" -Algorithm SHA256).Hash.ToLower()
+if ($actual -ne $expected) { throw "checksum mismatch" }
+Move-Item "bunpo-windows-$arch.exe" "$env:USERPROFILE\\bin\\bunpo.exe" -Force`;
+
+const sourceInstall = `go install github.com/nuggocto/bunpo/cmd/bunpo@${LATEST_VERSION}`;
+
+const verifyInstall = `bunpo --version`;
+
+const platforms = [
+	{
+		id: "linux",
+		label: "Linux",
+		sub: "amd64 / arm64",
+		fileLabel: `Linux (${LATEST_VERSION}, static binary)`,
+		code: linuxInstall,
+	},
+	{
+		id: "macos",
+		label: "macOS",
+		sub: "arm64 / amd64",
+		fileLabel: `macOS (${LATEST_VERSION}, static binary)`,
+		code: macosInstall,
+	},
+	{
+		id: "windows",
+		label: "Windows",
+		sub: "amd64 / arm64",
+		fileLabel: `Windows PowerShell (${LATEST_VERSION})`,
+		code: windowsInstall,
+	},
+];
+---
+
+<Base
+	title="Install — Bunpō"
+	description="Install Bunpō via the GitHub Action, verified static binaries for Linux, macOS, and Windows, or Go."
+>
+	<span class="eyebrow">install · {LATEST_VERSION}</span>
+	<h1>Install Bunpō</h1>
+	<p class="lead">
+		Add one line in GitHub Actions, drop a verified static binary onto any CI runner, or build
+		from source with Go. No server, no runtime dependencies, and no account required.
+	</p>
+
+	<section class="band" id="github-actions" style="margin-top: 2rem;">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>GitHub Actions</strong>
+				<span>Recommended</span>
+			</div>
+			<div>
+				<h2>One step puts bunpo on PATH</h2>
+				<p>
+					The Action resolves the latest <code>v0</code> release for Linux, macOS, or
+					Windows (x86-64 and ARM64), checks the binary against <code>SHA256SUMS</code>,
+					and adds <code>bunpo</code> to <code>PATH</code>. Your workflow calls the CLI
+					directly so standard input and every flag stay visible.
+				</p>
+				<CopyBlock label="Track v0 releases" code={actionBasic} />
+				<CopyBlock label={`Pin to ${LATEST_VERSION}`} code={actionPinned} />
+				<p class="small muted">
+					If you pin the Action to a commit SHA instead of <code>@v0</code>, pass{" "}
+					<code>with: version: {LATEST_VERSION}</code> explicitly.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="binaries">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Static binaries</strong>
+				<span>Any CI or local shell</span>
+			</div>
+			<div>
+				<h2>Download and verify against SHA256SUMS</h2>
+				<p>
+					Prebuilt static binaries (~3.2 MiB, Go standard library only) are published on
+					every release for Linux, macOS, and Windows on both x86-64 and ARM64.
+				</p>
+
+				<div class="install-tabs-box" data-install-tabs>
+					<div class="tabs tabs-3" role="tablist" aria-label="Operating system">
+						{
+							platforms.map((p, idx) => (
+								<button
+									type="button"
+									class="tab-btn"
+									role="tab"
+									aria-selected={idx === 0 ? "true" : "false"}
+									aria-controls={`install-panel-${p.id}`}
+									id={`install-tab-${p.id}`}
+									data-install-tab={p.id}
+								>
+									<span>{p.label}</span>
+									<span class="tab-sub">{p.sub}</span>
+								</button>
+							))
+						}
+					</div>
+
+					{
+						platforms.map((p, idx) => (
+							<div
+								id={`install-panel-${p.id}`}
+								role="tabpanel"
+								aria-labelledby={`install-tab-${p.id}`}
+								hidden={idx !== 0}
+								data-install-panel={p.id}
+							>
+								<CopyBlock label={p.fileLabel} code={p.code} />
+							</div>
+						))
+					}
+				</div>
+
+				<p class="small muted">
+					All release binaries and checksums live on{" "}
+					<a
+						href={`https://github.com/nuggocto/bunpo/releases/tag/${LATEST_VERSION}`}
+						target="_blank"
+						rel="noreferrer"
+					>
+						GitHub Releases ({LATEST_VERSION})
+					</a>
+					.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="from-source">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>From source</strong>
+				<span>Go 1.21+</span>
+			</div>
+			<div>
+				<h2>Build straight from the Go module</h2>
+				<p>
+					<code>go.mod</code> pins the exact Go 1.27 toolchain, which Go downloads
+					automatically on first build.
+				</p>
+				<CopyBlock label="Go install" code={sourceInstall} />
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="next">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Check &amp; wire up</strong>
+				<span>Next step</span>
+			</div>
+			<div>
+				<h2>Confirm the binary, then pick your test runner</h2>
+				<CopyBlock label="Verify installation" code={verifyInstall} />
+				<div class="actions">
+					<a href="/guides" class="btn">Read a runner guide</a>
+					<a href="/benchmarks" class="btn btn-ghost">View benchmarks</a>
+				</div>
+			</div>
+		</div>
+	</section>
+</Base>
+
+<script>
+	for (const root of document.querySelectorAll<HTMLElement>("[data-install-tabs]")) {
+		const tabs = root.querySelectorAll<HTMLButtonElement>("[data-install-tab]");
+		const panels = root.querySelectorAll<HTMLElement>("[data-install-panel]");
+		for (const tab of tabs) {
+			tab.addEventListener("click", () => {
+				const target = tab.dataset.installTab;
+				for (const t of tabs) {
+					t.setAttribute("aria-selected", t === tab ? "true" : "false");
+				}
+				for (const p of panels) {
+					p.hidden = p.dataset.installPanel !== target;
+				}
+			});
+		}
+	}
+</script>

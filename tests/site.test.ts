@@ -107,6 +107,8 @@ describe("built static output (when dist/ exists)", () => {
 	test.if(hasDist)("all required pages are built", () => {
 		for (const page of [
 			"dist/index.html",
+			"dist/install/index.html",
+			"dist/404.html",
 			"dist/guides/index.html",
 			"dist/guides/pytest/index.html",
 			"dist/guides/jest/index.html",
@@ -116,10 +118,14 @@ describe("built static output (when dist/ exists)", () => {
 			"dist/benchmarks/index.html",
 			"dist/changelog/index.html",
 			"dist/_headers",
-			"dist/favicon.svg",
+			"dist/favicon.png",
 			"dist/demo.gif",
 			"dist/brand/mitsu.webp",
-			"dist/brand/logo-mark.svg",
+			"dist/brand/mitsu.png",
+			"dist/brand/mitsu-404.webp",
+			"dist/brand/mitsu-404.png",
+			"dist/brand/logo-mark.webp",
+			"dist/brand/logo-mark.png",
 			"dist/brand/logo-mono.svg",
 			"dist/brand/logo-lockup.svg",
 		]) {

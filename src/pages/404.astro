@@ -1,0 +1,42 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+	title="Page not found — Bunpō"
+	description="This page is not in the split."
+	noindex
+>
+	<section class="not-found">
+		<figure class="not-found-art">
+			<picture>
+				<source srcset="/brand/mitsu-404.webp" type="image/webp" />
+				<img
+					src="/brand/mitsu-404.png"
+					alt="Mitsu standing on a golden watercolor hill looking at an empty red-dashed mystery hexagon cell"
+					width="440"
+					height="293"
+				/>
+			</picture>
+		</figure>
+
+		<div class="verify-404" role="status">
+			<p class="verify-404-code">404 · exit status 1</p>
+			<p class="verify-404-line">
+				<span class="verify-404-err">bunpo verify: error:</span> 1 page in the URL but
+				assigned to no machine
+			</p>
+		</div>
+
+		<h1>This page is not in the split.</h1>
+		<p class="lead not-found-copy">
+			Mitsu checked every manifest and came up empty. The page moved or never existed.
+		</p>
+
+		<div class="actions not-found-actions">
+			<a href="/" class="btn">Back home</a>
+			<a href="/install" class="btn btn-ghost">Install Bunpō</a>
+			<a href="/guides" class="btn btn-ghost">Read a runner guide</a>
+		</div>
+	</section>
+</Base>

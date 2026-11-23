@@ -1,18 +1,11 @@
 ---
 import { getCollection } from "astro:content";
-import CopyBlock from "../components/CopyBlock.astro";
 import HiveSplitDemo from "../components/HiveSplitDemo.astro";
 import TrialChart from "../components/TrialChart.astro";
 import { LATEST_VERSION } from "../data/releases";
 import Base from "../layouts/Base.astro";
 
 const guides = (await getCollection("guides")).sort((a, b) => a.data.order - b.data.order);
-
-const actionSnippet = `- uses: nuggocto/bunpo@v0`;
-const binarySnippet = `curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-linux-amd64
-curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS
-sha256sum --ignore-missing -c SHA256SUMS
-chmod +x bunpo-linux-amd64 && mv bunpo-linux-amd64 /usr/local/bin/bunpo`;
 ---
 
 <Base title="Bunpō (分蜂) — Balance CI test suites by timing, verify every file once">
@@ -27,15 +20,8 @@ chmod +x bunpo-linux-amd64 && mv bunpo-linux-amd64 /usr/local/bin/bunpo`;
 				with no server. Timings live in your own CI cache.
 			</p>
 			<div class="actions">
-				<a href="/guides" class="btn">Read a runner guide</a>
-				<a
-					href={`https://github.com/nuggocto/bunpo/releases/tag/${LATEST_VERSION}`}
-					class="btn btn-ghost"
-					target="_blank"
-					rel="noreferrer"
-				>
-					Download {LATEST_VERSION}
-				</a>
+				<a href="/install" class="btn">Install {LATEST_VERSION}</a>
+				<a href="/guides" class="btn btn-ghost">Read a runner guide</a>
 			</div>
 		</div>
 		<figure class="hero-art">
@@ -43,9 +29,9 @@ chmod +x bunpo-linux-amd64 && mv bunpo-linux-amd64 /usr/local/bin/bunpo`;
 				<source srcset="/brand/mitsu.webp" type="image/webp" />
 				<img
 					src="/brand/mitsu.png"
-					alt="Mitsu, a round honey-brown and cream bee with mint wings and a honeycomb satchel, holding out a hexagonal cell"
-					width="248"
-					height="248"
+					alt="Mitsu, a round honey-brown and cream bee with pale mint wings and a honeycomb satchel, holding out a hexagonal cell in watercolor and ink"
+					width="264"
+					height="264"
 				/>
 			</picture>
 			<figcaption class="hero-caption">Mitsu · cells of equal weight</figcaption>
@@ -87,37 +73,6 @@ chmod +x bunpo-linux-amd64 && mv bunpo-linux-amd64 /usr/local/bin/bunpo`;
 				<TrialChart />
 				<p class="small" style="margin-top: 1rem;">
 					<a href="/benchmarks">Read all benchmark tables, tight splits, and indivisible-file limits →</a>
-				</p>
-			</div>
-		</div>
-	</section>
-
-	<section class="band" id="install">
-		<div class="band-head">
-			<div class="band-label">
-				<strong>Install</strong>
-				<span>GitHub Actions or any CI</span>
-			</div>
-			<div>
-				<h2>One line in GitHub Actions, or one static binary anywhere else.</h2>
-				<p>
-					The Action downloads the binary for Linux, macOS, or Windows (x86-64 and ARM64),
-					checks it against <code>SHA256SUMS</code>, and puts <code>bunpo</code> on
-					<code>PATH</code>. Your workflow calls the CLI directly so standard input and
-					every flag stay visible.
-				</p>
-				<CopyBlock label="GitHub Actions" code={actionSnippet} />
-				<CopyBlock label={`Direct download (${LATEST_VERSION}, Linux x86-64)`} code={binarySnippet} />
-				<p class="small muted">
-					Need macOS, Windows, or ARM64? Grab the matching binary from{" "}
-					<a
-						href={`https://github.com/nuggocto/bunpo/releases/tag/${LATEST_VERSION}`}
-						target="_blank"
-						rel="noreferrer"
-					>
-						GitHub Releases
-					</a>
-					.
 				</p>
 			</div>
 		</div>
