@@ -188,15 +188,15 @@ pinned too.
   `--no-deps`:
 
   ```bash
-  npx playwright test --project=setup --reporter=list
+  npx playwright test --project=setup --no-deps --reporter=list
   npx playwright test --no-deps --reporter=list,junit "${patterns[@]}" || status=$?
   ```
 
   Store login or auth state outside `test-results/` (for example
   `playwright/.auth/user.json`), because the second Playwright command clears
   `test-results/` on startup. If you also have a `teardown` project, run it
-  after `bunpo record`, since `--no-deps` skips project dependencies in both
-  directions.
+  after `bunpo record` with `--project=<teardown> --no-deps`, since `--no-deps`
+  skips project dependencies and teardowns.
 - **Multi-project suites and multiple `workers`.** When several Playwright
   projects run the same spec files (for example desktop and mobile viewports
   sharing `tests/smoke/`), `bunpo record` sums all projects' case durations
