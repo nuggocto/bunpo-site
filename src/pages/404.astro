@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import { asset } from "../lib/asset";
 ---
 
 <Base
@@ -10,9 +11,9 @@ import Base from "../layouts/Base.astro";
 	<section class="not-found">
 		<figure class="not-found-art">
 			<picture>
-				<source srcset="/brand/mitsu-404.webp" type="image/webp" />
+				<source srcset={asset("/brand/mitsu-404.webp")} type="image/webp" />
 				<img
-					src="/brand/mitsu-404.png"
+					src={asset("/brand/mitsu-404.png")}
 					alt="Mitsu standing on a golden watercolor hill looking at an empty red-dashed mystery hexagon cell"
 					width="440"
 					height="293"

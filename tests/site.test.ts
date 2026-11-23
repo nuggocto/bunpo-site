@@ -166,6 +166,14 @@ describe("built static output (when dist/ exists)", () => {
 		}
 	});
 
+	test.if(hasDist)("every brand image URL carries a content hash", () => {
+		for (const page of ["dist/index.html", "dist/404.html", "dist/install/index.html"]) {
+			const urls = [...readFileSync(page, "utf8").matchAll(/"[^"]*(\/brand\/[^"]+)"/g)];
+			expect(urls.length).toBeGreaterThan(0);
+			for (const [, url] of urls) expect(url, page).toMatch(/\?v=[0-9a-f]{10}$/);
+		}
+	});
+
 	test.if(hasDist)("internal links resolve to built files", () => {
 		const htmlFiles: string[] = [];
 		const walk = (dir: string) => {
@@ -179,7 +187,7 @@ describe("built static output (when dist/ exists)", () => {
 
 		for (const file of htmlFiles) {
 			const html = readFileSync(file, "utf8");
-			for (const m of html.matchAll(/(?:href|src)="(\/[^"#?]*)"/g)) {
+			for (const m of html.matchAll(/(?:href|src|srcset)="(\/[^"#?]*)(?:[?#][^"]*)?"/g)) {
 				const target = m[1];
 				const asFile = join("dist", target);
 				const asIndex = join("dist", target, "index.html");

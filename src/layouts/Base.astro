@@ -10,6 +10,7 @@ import "@fontsource/newsreader/500.css";
 import "@fontsource/newsreader/600.css";
 import "../styles/global.css";
 import { LATEST_VERSION } from "../data/releases";
+import { asset } from "../lib/asset";
 
 interface Props {
 	title: string;
@@ -31,7 +32,7 @@ interface NavItem {
 
 const path = Astro.url.pathname;
 const canonical = new URL(path, Astro.site).href;
-const ogImage = new URL("/brand/og.png", Astro.site).href;
+const ogImage = new URL(asset("/brand/og.png"), Astro.site).href;
 const internalNav: NavItem[] = [
 	{ href: "/install", label: "install" },
 	{ href: "/guides", label: "guides" },
@@ -54,8 +55,8 @@ const isCurrent = (href: string, external?: boolean) =>
 		<meta name="description" content={description} />
 		{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
 		<meta name="theme-color" content="#faf8f5" />
-		<link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
-		<link rel="apple-touch-icon" sizes="180x180" href="/brand/logo-mark.png" />
+		<link rel="icon" type="image/png" sizes="64x64" href={asset("/favicon.png")} />
+		<link rel="apple-touch-icon" sizes="180x180" href={asset("/brand/logo-mark.png")} />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
 		<meta property="og:type" content="website" />
@@ -72,8 +73,8 @@ const isCurrent = (href: string, external?: boolean) =>
 			<div class="header-wrap header-inner">
 				<a href="/" class="brand-link" aria-label="Bunpō home">
 					<picture>
-						<source srcset="/brand/logo-mark.webp" type="image/webp" />
-						<img src="/brand/logo-mark.png" alt="" class="brand-mark" width="38" height="38" />
+						<source srcset={asset("/brand/logo-mark.webp")} type="image/webp" />
+						<img src={asset("/brand/logo-mark.png")} alt="" class="brand-mark" width="38" height="38" />
 					</picture>
 					<span class="brand-name">Bunpō</span>
 					<span class="brand-ver">{LATEST_VERSION}</span>
@@ -139,7 +140,7 @@ const isCurrent = (href: string, external?: boolean) =>
 		<footer class="site-footer">
 			<div class="wrap footer-inner">
 				<div class="footer-brand">
-					<img src="/brand/logo-mono.svg" alt="" width="24" height="24" />
+					<img src={asset("/brand/logo-mono.svg")} alt="" width="24" height="24" />
 					<span class="mono">bunpo {LATEST_VERSION} · Apache-2.0 · no server, no telemetry</span>
 				</div>
 				<div class="footer-links">
