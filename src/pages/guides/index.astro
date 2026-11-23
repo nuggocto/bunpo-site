@@ -1,0 +1,88 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+
+const guides = (await getCollection("guides")).sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base
+	title="Runner guides — Bunpō"
+	description="Complete GitHub Actions workflows for pytest, Jest, Vitest, RSpec, and Playwright."
+>
+	<span class="eyebrow">guides</span>
+	<h1>Setup guides by test runner</h1>
+	<p class="lead">
+		Every guide is a complete, copy-paste GitHub Actions workflow checked against the real runner.
+		Each one handles empty shards, keeps pull requests from overwriting timings, and prevents
+		pattern-matching runners from executing files twice.
+	</p>
+
+	<section class="band" style="margin-top: 2rem;">
+		<ul class="runner-list">
+			{
+				guides.map((g) => (
+					<li>
+						<a href={`/guides/${g.id}`} class="runner-row">
+							<span class="runner-name">{g.data.title}</span>
+							<span class="runner-detail">
+								{g.data.reportFormat} · {g.data.selection}
+							</span>
+							<span class="runner-arrow">read →</span>
+						</a>
+					</li>
+				))
+			}
+		</ul>
+
+		<div class="table-wrap" style="margin-top: 2.25rem;">
+			<table>
+				<thead>
+					<tr>
+						<th>Runner</th>
+						<th>Report format</th>
+						<th>How exact files are passed</th>
+						<th>record flags</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><a href="/guides/pytest">pytest</a></td>
+						<td>JUnit XML (<code>junit_family=xunit1</code>)</td>
+						<td>File arguments after <code>--</code></td>
+						<td class="muted">—</td>
+					</tr>
+					<tr>
+						<td><a href="/guides/jest">Jest</a></td>
+						<td>JUnit XML (<code>jest-junit</code>)</td>
+						<td>Anchored escaped regex per file</td>
+						<td class="muted">—</td>
+					</tr>
+					<tr>
+						<td><a href="/guides/vitest">Vitest</a></td>
+						<td>Inline full-cost reporter (<code>--format lines</code>)</td>
+						<td><code>include</code> from <code>BUNPO_TESTS_FILE</code></td>
+						<td><code>--format lines</code></td>
+					</tr>
+					<tr>
+						<td><a href="/guides/rspec">RSpec</a></td>
+						<td>JUnit XML (<code>rspec_junit_formatter</code>)</td>
+						<td>File arguments after <code>--</code></td>
+						<td class="muted">—</td>
+					</tr>
+					<tr>
+						<td><a href="/guides/playwright">Playwright</a></td>
+						<td>Built-in JUnit reporter</td>
+						<td><code>--test-list</code></td>
+						<td><code>--file-from classname --path-prefix tests</code></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<p class="small muted">
+			Using another runner? Write one <code>&lt;path&gt; &lt;milliseconds&gt;</code> line per
+			passing file (and <code>&lt;path&gt; -</code> for a failed file) and pass{" "}
+			<code>bunpo record --format lines</code>.
+		</p>
+	</section>
+</Base>

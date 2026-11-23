@@ -1,0 +1,40 @@
+---
+import { releases } from "../data/releases";
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Changelog — Bunpō" description="Release history for Bunpō.">
+	<span class="eyebrow">changelog</span>
+	<h1>Releases</h1>
+	<p class="lead">
+		Every release of Bunpō. Prebuilt static binaries and <code>SHA256SUMS</code> start at{" "}
+		<code>v0.0.3</code> on{" "}
+		<a href="https://github.com/nuggocto/bunpo/releases" target="_blank" rel="noreferrer">
+			GitHub Releases
+		</a>
+		.
+	</p>
+
+	<div style="margin-top: 2rem;">
+		{
+			releases.map((r) => (
+				<article class="release-entry" id={r.version}>
+					<div class="release-meta">
+						<a href={r.url} target="_blank" rel="noreferrer">
+							{r.version}
+						</a>
+						<span class="release-date">{r.date}</span>
+					</div>
+					<div>
+						<p>{r.summary}</p>
+						<ul class="release-notes">
+							{r.notes.map((n) => (
+								<li>{n}</li>
+							))}
+						</ul>
+					</div>
+				</article>
+			))
+		}
+	</div>
+</Base>

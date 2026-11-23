@@ -1,0 +1,256 @@
+---
+import { getCollection } from "astro:content";
+import CopyBlock from "../components/CopyBlock.astro";
+import HiveSplitDemo from "../components/HiveSplitDemo.astro";
+import TrialChart from "../components/TrialChart.astro";
+import { LATEST_VERSION } from "../data/releases";
+import Base from "../layouts/Base.astro";
+
+const guides = (await getCollection("guides")).sort((a, b) => a.data.order - b.data.order);
+
+const actionSnippet = `- uses: nuggocto/bunpo@v0`;
+const binarySnippet = `curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-linux-amd64
+curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS
+sha256sum --ignore-missing -c SHA256SUMS
+chmod +x bunpo-linux-amd64 && mv bunpo-linux-amd64 /usr/local/bin/bunpo`;
+---
+
+<Base title="Bunpō (分蜂) — Balance CI test suites by timing, verify every file once">
+	<section class="hero">
+		<div>
+			<span class="eyebrow">分蜂 · the bees dividing their hive</span>
+			<h1>Balance CI test suites by timing and verify every assignment.</h1>
+			<p class="lead">
+				Split tests by name and one machine gets the slow files while the others sit idle.
+				Bunpō remembers how long each file took, deals them out longest first, and fails the
+				build if a stale cache leaves a file unassigned or duplicated. It is one static binary
+				with no server. Timings live in your own CI cache.
+			</p>
+			<div class="actions">
+				<a href="/guides" class="btn">Read a runner guide</a>
+				<a
+					href={`https://github.com/nuggocto/bunpo/releases/tag/${LATEST_VERSION}`}
+					class="btn btn-ghost"
+					target="_blank"
+					rel="noreferrer"
+				>
+					Download {LATEST_VERSION}
+				</a>
+			</div>
+		</div>
+		<figure class="hero-art">
+			<picture>
+				<source srcset="/brand/mitsu.webp" type="image/webp" />
+				<img
+					src="/brand/mitsu.png"
+					alt="Mitsu, a round honey-brown and cream bee with mint wings and a honeycomb satchel, holding out a hexagonal cell"
+					width="248"
+					height="248"
+				/>
+			</picture>
+			<figcaption class="hero-caption">Mitsu · cells of equal weight</figcaption>
+		</figure>
+	</section>
+
+	<dl class="facts" aria-label="Measured gains and facts">
+		<div class="fact">
+			<dt>Postgres suite (4 machines)</dt>
+			<dd class="gain-positive">25m 30s → 6m 16s (4.0x)</dd>
+		</div>
+		<div class="fact">
+			<dt>Playwright CI (2 runners)</dt>
+			<dd class="gain-positive">19m 47s → 9m 58s (-49.6%)</dd>
+		</div>
+		<div class="fact">
+			<dt>binary</dt>
+			<dd>3.2 MiB, Go stdlib only</dd>
+		</div>
+		<div class="fact">
+			<dt>hosting</dt>
+			<dd>None, uses your CI cache</dd>
+		</div>
+	</dl>
+
+	<section class="band" id="benchmarks">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Before &amp; after</strong>
+				<span>Measured time saved</span>
+			</div>
+			<div>
+				<h2>Cut 19 minutes off a Postgres suite, and 2 minutes off a count-based split.</h2>
+				<p>
+					Measured machine times from two production repositories (local 4-CPU trials and a
+					live GitHub Actions Playwright run on <code>v0.0.5</code>) alongside the declared
+					40-file benchmark. Switch suites to compare before and after on each machine.
+				</p>
+				<TrialChart />
+				<p class="small" style="margin-top: 1rem;">
+					<a href="/benchmarks">Read all benchmark tables, tight splits, and indivisible-file limits →</a>
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="install">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Install</strong>
+				<span>GitHub Actions or any CI</span>
+			</div>
+			<div>
+				<h2>One line in GitHub Actions, or one static binary anywhere else.</h2>
+				<p>
+					The Action downloads the binary for Linux, macOS, or Windows (x86-64 and ARM64),
+					checks it against <code>SHA256SUMS</code>, and puts <code>bunpo</code> on
+					<code>PATH</code>. Your workflow calls the CLI directly so standard input and
+					every flag stay visible.
+				</p>
+				<CopyBlock label="GitHub Actions" code={actionSnippet} />
+				<CopyBlock label={`Direct download (${LATEST_VERSION}, Linux x86-64)`} code={binarySnippet} />
+				<p class="small muted">
+					Need macOS, Windows, or ARM64? Grab the matching binary from{" "}
+					<a
+						href={`https://github.com/nuggocto/bunpo/releases/tag/${LATEST_VERSION}`}
+						target="_blank"
+						rel="noreferrer"
+					>
+						GitHub Releases
+					</a>
+					.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="how-it-works">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>How it works</strong>
+				<span>Split, record, verify, merge</span>
+			</div>
+			<div>
+				<h2>Deal the slowest files first, then verify every machine saw the same split.</h2>
+				<p>
+					Take six files that run in 9, 7, 6, 5, 4, and 3 minutes across two machines.
+					Splitting alphabetically stacks the three heaviest files onto machine 0 (22 minutes)
+					while machine 1 finishes in 12. Bunpō deals longest first to whichever machine has
+					the smallest load: 9 + 5 + 3 and 7 + 6 + 4, 17 minutes each, cutting 5 minutes off
+					the build. Each machine writes its share and a SHA-256 digest of its inputs into a
+					manifest, and <code>bunpo verify</code> checks every manifest at the end so a stale
+					cache cannot drop or double-run a file.
+				</p>
+				<HiveSplitDemo />
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="workflow">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>In your pipeline</strong>
+				<span>Four plain commands</span>
+			</div>
+			<div>
+				<h2>Standard output carries file lists. Messages go to standard error.</h2>
+				<ol class="steps-list">
+					<li>
+						<span class="step-cmd">split</span>
+						<div>
+							<strong><code>bunpo split --index N --total M</code></strong> reads the test
+							list from standard input, prints machine N's share, and writes{" "}
+							<code>.bunpo/manifest-N.json</code> only after the full list is written.
+						</div>
+					</li>
+					<li>
+						<span class="step-cmd">run</span>
+						<div>
+							<strong>Your test runner</strong> executes those exact files and writes a
+							JUnit XML report or a two-column timing file. Empty shards skip the runner
+							so it cannot run the whole suite by accident.
+						</div>
+					</li>
+					<li>
+						<span class="step-cmd">record</span>
+						<div>
+							<strong><code>bunpo record --index N report.xml</code></strong> sums exact
+							case durations per file, checks the report against the manifest, and refuses
+							unassigned files. Files with failures stay seen without recording a bad time.
+						</div>
+					</li>
+					<li>
+						<span class="step-cmd">verify</span>
+						<div>
+							<strong><code>bunpo verify</code> and <code>bunpo merge</code></strong> run
+							in a final job. <code>verify</code> proves every file was assigned once from
+							the same inputs; <code>merge</code> updates the rolling 5-run median in{" "}
+							<code>timings.json</code> and drops files unseen for 30 runs.
+						</div>
+					</li>
+				</ol>
+				<p class="small muted" style="margin-top: 1rem;">
+					<code>verify</code> checks assignments, not execution. Your workflow still checks
+					runner exit statuses and expected reports; every guide below wires up both.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="demo">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>In the terminal</strong>
+				<span>Exit 0, 1, or 2</span>
+			</div>
+			<div>
+				<h2>See split, record, merge, and verify catching a stale timing cache.</h2>
+				<p>
+					In GitHub Actions, warnings and failures become workflow annotations automatically.
+					Exit status is <code>0</code> on success, <code>1</code> when a check fails, and{" "}
+					<code>2</code> on bad input or flags.
+				</p>
+				<div class="demo-frame">
+					<img
+						src="/demo.gif"
+						alt="Terminal recording of bunpo split, record, merge, and verify catching a stale timing cache on machine 2"
+						width="1160"
+						height="640"
+						loading="lazy"
+					/>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="guides">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Guides</strong>
+				<span>Tested on real runners</span>
+			</div>
+			<div>
+				<h2>Complete GitHub Actions workflows for five runners.</h2>
+				<p>
+					Each guide is tested against the real runner with decoy files and glob characters,
+					because runners like Jest, Vitest, and Playwright treat plain file arguments as
+					patterns unless you lock them down.
+				</p>
+				<ul class="runner-list">
+					{
+						guides.map((g) => (
+							<li>
+								<a href={`/guides/${g.id}`} class="runner-row">
+									<span class="runner-name">{g.data.title}</span>
+									<span class="runner-detail">
+										{g.data.reportFormat} · {g.data.selection}
+									</span>
+									<span class="runner-arrow">guide →</span>
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+		</div>
+	</section>
+</Base>

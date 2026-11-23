@@ -1,0 +1,282 @@
+---
+import TrialChart from "../components/TrialChart.astro";
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+	title="Benchmarks and trials — Bunpō"
+	description="Predicted loads, repeated measured runs, and real production CI trials for Bunpō."
+>
+	<span class="eyebrow">benchmarks &amp; trials</span>
+	<h1>Measured numbers, including the cases that will not balance.</h1>
+	<p class="lead">
+		Predicted load balance and actual CI wall time are two different numbers. Setup costs,
+		indivisible slow files, runner hardware differences, and queue delays all show up in real
+		runs. Both are reported separately below.
+	</p>
+
+	<section class="band" style="margin-top: 2rem;">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Before &amp; after</strong>
+				<span>Switch suites</span>
+			</div>
+			<div>
+				<h2>Interactive before-and-after comparison</h2>
+				<TrialChart />
+			</div>
+		</div>
+	</section>
+
+	<section class="band">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Live CI trial</strong>
+				<span>LaTabdhir · GitHub Actions</span>
+			</div>
+			<div>
+				<h2>Playwright E2E on two self-hosted runners (v0.0.5)</h2>
+				<p>
+					An outside maintainer wired <code>nuggocto/bunpo@v0</code> into{" "}
+					<code>.github/workflows/e2e.yml</code> from the Playwright guide alone: 68 specs,
+					232 cases, Docker Compose per runner, across one x64 runner and one ARM64 runner.
+				</p>
+				<div class="table-wrap">
+					<table>
+						<thead>
+							<tr>
+								<th>Run</th>
+								<th>Slowest browser job</th>
+								<th>Verify + merge</th>
+								<th>Workflow elapsed (incl. queue)</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Single machine (ARM64 baseline)</td>
+								<td>19m 12s</td>
+								<td>—</td>
+								<td>19m 47s</td>
+							</tr>
+							<tr>
+								<td>Cold (2 machines, by count)</td>
+								<td>8m 46s</td>
+								<td>17s</td>
+								<td>9m 58s (49.6% shorter)</td>
+							</tr>
+							<tr>
+								<td>Warm (2 machines, timed 4m42s / 4m42s)</td>
+								<td>7m 32s</td>
+								<td>16s</td>
+								<td>17m 49s (13m 09s x64 queue delay)</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<p class="small muted">
+					In the warm run, Bunpō predicted 4m42s on both shards; actual Playwright wall was
+					3m 32s on x64 vs 6m 29s on ARM64, and another CI job queued x64 for 13m 09s. Static
+					file-level splitting assumes similar machines starting together.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="band">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Local trials</strong>
+				<span>7 real suites · 4 CPUs each</span>
+			</div>
+			<div>
+				<h2>Production suites on LaTabdhir and Majlisna</h2>
+				<p>
+					Each machine ran alone pinned with <code>taskset</code> to 4 CPUs to eliminate
+					host contention, measuring test-command wall time (excluding CI checkout and
+					dependency install). Every round ran the exact same test count as baseline with{" "}
+					<code>verify</code> and <code>merge</code> exiting 0.
+				</p>
+				<div class="table-wrap">
+					<table>
+						<thead>
+							<tr>
+								<th>Suite</th>
+								<th>Runner</th>
+								<th>1 machine</th>
+								<th>4 machines (count)</th>
+								<th>4 machines (timed R2 / R3)</th>
+								<th>Speedup</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>LaTabdhir Postgres parity</td>
+								<td>pytest (495 files)</td>
+								<td>25m 30s</td>
+								<td>6m 36s (54.5s spread)</td>
+								<td>6m 16s / 6m 19s (5.4s / 10.3s)</td>
+								<td>4.0x</td>
+							</tr>
+							<tr>
+								<td>LaTabdhir backend SQLite</td>
+								<td>pytest -n 4 (495 files)</td>
+								<td>3m 42s</td>
+								<td>1m 27s (20.3s spread)</td>
+								<td>1m 01s / 1m 03s (2.6s / 5.7s)</td>
+								<td>3.6x</td>
+							</tr>
+							<tr>
+								<td>LaTabdhir front</td>
+								<td>Vitest full-cost (294 files)</td>
+								<td>2m 03s</td>
+								<td>37.6s (5.8s spread)</td>
+								<td>34.3s / 36.6s (1.7s / 2.4s)</td>
+								<td>3.4x</td>
+							</tr>
+							<tr>
+								<td>LaTabdhir E2E</td>
+								<td>Playwright workers: 1 (68 specs)</td>
+								<td>5m 09s</td>
+								<td>3m 09s (113.9s spread, 1 flake)</td>
+								<td>1m 34s–1m 43s clean (2m 45s / 2m 24s w/ flake)</td>
+								<td>~3.0x clean</td>
+							</tr>
+							<tr>
+								<td>Majlisna backend Postgres</td>
+								<td>pytest (113 files)</td>
+								<td>8m 10s</td>
+								<td>4m 15s (179.5s spread)</td>
+								<td>2m 08s / 2m 13s (7.3s / 11.1s)</td>
+								<td>3.8x</td>
+							</tr>
+							<tr>
+								<td>Majlisna E2E (17 projects)</td>
+								<td>Playwright (70 specs)</td>
+								<td>6m 14s</td>
+								<td>3m 28s (140.6s spread)</td>
+								<td>3m 28s (floored by 190s WS spec)</td>
+								<td>1.8x</td>
+							</tr>
+							<tr>
+								<td>Majlisna front</td>
+								<td>Vitest full-cost (151 files)</td>
+								<td>24.7s</td>
+								<td>7.8s (1.08s spread)</td>
+								<td>7.8s / 7.7s (0.56s / 0.32s)</td>
+								<td>3.2x</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="band">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Synthetic suite</strong>
+				<span>docs/benchmark.md</span>
+			</div>
+			<div>
+				<h2>Declared benchmark, tight split, and indivisible file</h2>
+				<p>
+					Run with real pytest processes on 4 parallel machines (fixed pytest startup: 134 ms
+					per machine). The declared target is predicted slowest / fastest ≤ 1.10 on the
+					Many files suite.
+				</p>
+				<div class="table-wrap">
+					<table>
+						<thead>
+							<tr>
+								<th>Suite</th>
+								<th>Shape</th>
+								<th>Predicted ratio (R3)</th>
+								<th>Wall ratio (R3)</th>
+								<th>Slowest wall (R3)</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Many files</td>
+								<td>40 files, 100–900 ms</td>
+								<td>1.021</td>
+								<td>1.028</td>
+								<td>5,042 ms</td>
+							</tr>
+							<tr>
+								<td>Tight</td>
+								<td>13 files with exact 3s optimal split</td>
+								<td>1.104</td>
+								<td>1.104</td>
+								<td>3,392 ms</td>
+							</tr>
+							<tr>
+								<td>Indivisible</td>
+								<td>One 6,000 ms file + twelve 500 ms files</td>
+								<td>2.995</td>
+								<td>2.839</td>
+								<td>6,174 ms</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<p class="small muted">
+					Longest-first dealing guarantees a makespan within 4/3 of optimal, not an exact
+					partition search: the Tight suite shows the gap, and Indivisible shows why{" "}
+					<code>bunpo split</code> warns when one file exceeds the average machine load.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="band">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Overhead &amp; limits</strong>
+				<span>Binary, split speed, bounds</span>
+			</div>
+			<div>
+				<h2>31 ms to split 50,000 tests across 256 machines</h2>
+				<p>
+					Bunpō runs on every machine on every build, so startup, split speed, and binary
+					size stay small. Measured on the Go benchmark suite, the <code>v0.0.6</code>{" "}
+					release binaries, and the live GitHub Actions trial:
+				</p>
+				<div class="table-wrap">
+					<table>
+						<thead>
+							<tr>
+								<th>Metric</th>
+								<th>Workload / scope</th>
+								<th>Measured value</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>BenchmarkSplit</code></td>
+								<td>50,000 tests, 256 machines (budget: &lt; 1 s)</td>
+								<td>~31 ms (403 allocs)</td>
+							</tr>
+							<tr>
+								<td><code>verify</code> + <code>merge</code> CI job</td>
+								<td>Live GitHub Actions (LaTabdhir, 68 specs, incl. checkout &amp; artifacts)</td>
+								<td>16–17 s total</td>
+							</tr>
+							<tr>
+								<td>Release binary size (<code>v0.0.6</code>)</td>
+								<td>Static binary, Go stdlib only (<code>linux/amd64</code>)</td>
+								<td>3.2 MiB (3.1–3.5 MB across targets)</td>
+							</tr>
+							<tr>
+								<td>Input &amp; report caps</td>
+								<td><code>timings.json</code>, manifests, JUnit XML, stdin list</td>
+								<td>64 MiB per file · 32 XML depth · 2M tokens</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</section>
+</Base>

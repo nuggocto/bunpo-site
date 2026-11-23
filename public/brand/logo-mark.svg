@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Bunpō — Mitsu over a hexagon">
+  <!-- Single hexagon cell -->
+  <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="#F6ECD9" stroke="#2B1F16" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Mint wing tips peeking behind -->
+  <ellipse cx="17" cy="30" rx="7" ry="4.5" transform="rotate(-24 17 30)" fill="#43A581" stroke="#2B1F16" stroke-width="2"/>
+  <ellipse cx="47" cy="30" rx="7" ry="4.5" transform="rotate(24 47 30)" fill="#43A581" stroke="#2B1F16" stroke-width="2"/>
+  <!-- Antennae -->
+  <path d="M27 21 C25 15 22 14 21 15" stroke="#2B1F16" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="20.5" cy="15" r="1.8" fill="#2B1F16"/>
+  <path d="M37 21 C39 15 42 14 43 15" stroke="#2B1F16" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="43.5" cy="15" r="1.8" fill="#2B1F16"/>
+  <!-- Round honey-brown head -->
+  <circle cx="32" cy="35" r="15" fill="#8C5A2B" stroke="#2B1F16" stroke-width="2.5"/>
+  <!-- Warm cream face mask -->
+  <path d="M20.5 34.5 C20.5 27.5 26 24.5 32 28 C38 24.5 43.5 27.5 43.5 34.5 C43.5 42 38.5 46.5 32 46.5 C25.5 46.5 20.5 42 20.5 34.5 Z" fill="#F6ECD9"/>
+  <!-- Eyes and calm smile -->
+  <circle cx="27.2" cy="35.5" r="2" fill="#2B1F16"/>
+  <circle cx="36.8" cy="35.5" r="2" fill="#2B1F16"/>
+  <path d="M29.6 39.6 Q32 41.8 34.4 39.6" stroke="#2B1F16" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Small amber pollen accent at bottom vertex -->
+  <circle cx="32" cy="54" r="2.2" fill="#D99B38"/>
+</svg>

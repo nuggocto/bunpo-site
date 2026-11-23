@@ -1,0 +1,29 @@
+{
+	"name": "bunpo-site",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"packageManager": "bun@1.4.5",
+	"scripts": {
+		"dev": "bunx --bun astro dev",
+		"build": "bunx --bun astro build",
+		"preview": "bunx --bun astro preview",
+		"check": "bunx --bun astro check",
+		"lint": "bunx --bun biome check .",
+		"fmt": "bunx --bun biome format --write .",
+		"fmt:check": "bunx --bun biome format .",
+		"test": "bun test"
+	},
+	"dependencies": {
+		"@fontsource/ibm-plex-mono": "^5.2.5",
+		"@fontsource/ibm-plex-sans": "^5.2.5",
+		"@fontsource/newsreader": "^5.2.5",
+		"astro": "^5.16.0"
+	},
+	"devDependencies": {
+		"@astrojs/check": "^0.9.6",
+		"@biomejs/biome": "^2.3.0",
+		"@types/bun": "^1.4.5",
+		"typescript": "^5.8.0"
+	}
+}

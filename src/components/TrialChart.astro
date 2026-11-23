@@ -1,0 +1,186 @@
+---
+import { formatSeconds, trials } from "../data/benchmarks";
+
+interface Props {
+	initialId?: string;
+}
+
+const { initialId = trials[0].id } = Astro.props;
+---
+
+<div class="chart-panel" data-trial-chart>
+	<div class="tabs tabs-2" role="tablist" aria-label="Measured test suites">
+		{
+			trials.map((t) => (
+				<button
+					type="button"
+					class="tab-btn"
+					role="tab"
+					aria-selected={t.id === initialId ? "true" : "false"}
+					aria-controls={`trial-panel-${t.id}`}
+					id={`trial-tab-${t.id}`}
+					data-trial-tab={t.id}
+				>
+					<span>{t.title}</span>
+					<span class="tab-sub">{t.shortTag}</span>
+				</button>
+			))
+		}
+	</div>
+
+	{
+		trials.map((t) => {
+			const maxSec = Math.max(
+				...t.beforeBars.map((b) => b.seconds),
+				...t.afterBars.map((b) => b.seconds),
+			);
+			const beforeSlowest = Math.max(...t.beforeBars.map((b) => b.seconds));
+			const afterSlowest = Math.max(...t.afterBars.map((b) => b.seconds));
+			const savedVsCount = beforeSlowest - afterSlowest;
+			return (
+				<div
+					id={`trial-panel-${t.id}`}
+					role="tabpanel"
+					aria-labelledby={`trial-tab-${t.id}`}
+					hidden={t.id !== initialId}
+					data-trial-panel={t.id}
+				>
+					<div class="gain-strip">
+						<div class="gain-cell">
+							<span class="gain-label">{t.beforeLabel}</span>
+							<span class="gain-value">{t.beforeHeadline}</span>
+						</div>
+						<div class="gain-cell">
+							<span class="gain-label">{t.afterLabel}</span>
+							<span class="gain-value">{t.afterHeadline}</span>
+						</div>
+						<div class="gain-cell gain-cell-accent">
+							<span class="gain-label">{t.gainLabel}</span>
+							<span class="gain-value gain-positive">{t.gainHeadline}</span>
+						</div>
+					</div>
+
+					<div class="chart-meta">
+						<span>{t.subtitle}</span>
+						<span>{t.gainDetail}</span>
+					</div>
+
+					<div class="chart-groups">
+						<div class="chart-col chart-col-before">
+							<div class="chart-col-head">
+								<p class="chart-group-title">{t.beforeTitle}</p>
+								<p class="chart-group-meta">{t.beforeMeta}</p>
+							</div>
+							{t.beforeBars.map((bar) => {
+								const pct = Math.max(2, (bar.seconds / maxSec) * 100);
+								const isSlowest = bar.seconds === beforeSlowest;
+								return (
+									<div class="bar-row">
+										<div class="bar-head">
+											<span>
+												{bar.label}{" "}
+												<span class="muted">
+													({bar.files} {bar.files === 1 ? "file" : "files"}
+													{bar.inlineNote ? ` · ${bar.inlineNote}` : ""})
+												</span>
+											</span>
+											<span class={isSlowest ? "bar-slowest" : undefined}>
+												{formatSeconds(bar.seconds)}
+											</span>
+										</div>
+										<svg class="bar-svg" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
+											<rect x="0" y="1" width="200" height="10" fill="#FAF8F5" stroke="#DCD5C9" stroke-width="1" />
+											<rect
+												x="0.5"
+												y="1.5"
+												width={(pct * 2 - 1).toFixed(1)}
+												height="9"
+												fill="#8C5A2B"
+												fill-opacity={isSlowest ? "0.6" : "0.28"}
+												stroke="#8C5A2B"
+												stroke-width="1"
+											/>
+										</svg>
+										{bar.note && <div class="small muted mono">{bar.note}</div>}
+									</div>
+								);
+							})}
+						</div>
+
+						<div class="chart-col chart-col-after">
+							<div class="chart-col-head">
+								<p class="chart-group-title">{t.afterTitle}</p>
+								<p class="chart-group-meta">{t.afterMeta}</p>
+							</div>
+							{t.afterBars.map((bar) => {
+								const pct = Math.max(2, (bar.seconds / maxSec) * 100);
+								const beforeX = Math.min(199, Math.max(2, (beforeSlowest / maxSec) * 100) * 2);
+								const isSlowest = bar.seconds === afterSlowest;
+								return (
+									<div class="bar-row">
+										<div class="bar-head">
+											<span>
+												{bar.label}{" "}
+												<span class="muted">
+													({bar.files} {bar.files === 1 ? "file" : "files"}
+													{bar.inlineNote ? ` · ${bar.inlineNote}` : ""})
+												</span>
+											</span>
+											<span class={isSlowest ? "gain-positive" : undefined}>
+												{formatSeconds(bar.seconds)}
+											</span>
+										</div>
+										<svg class="bar-svg" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
+											<rect x="0" y="1" width="200" height="10" fill="#FAF8F5" stroke="#DCD5C9" stroke-width="1" />
+											<rect x="0.5" y="1.5" width={(pct * 2 - 1).toFixed(1)} height="9" fill="#3B9B76" stroke="#1F7A5A" stroke-width="1" />
+											{savedVsCount > 0 && (
+												<line
+													x1={beforeX.toFixed(1)}
+													y1="0"
+													x2={beforeX.toFixed(1)}
+													y2="12"
+													stroke="#8C5A2B"
+													stroke-width="1.2"
+													stroke-dasharray="2 2"
+												/>
+											)}
+										</svg>
+										{bar.note && <div class="small muted mono">{bar.note}</div>}
+									</div>
+								);
+							})}
+						</div>
+					</div>
+
+					<div class="chart-footnote">
+						<p>
+							<strong>{t.takeaway}</strong>
+							{savedVsCount >= 1 && (
+								<span> Dashed line marks the slowest count-split machine ({formatSeconds(beforeSlowest)}).</span>
+							)}
+						</p>
+						<p>{t.environment}. {t.caveat}</p>
+					</div>
+				</div>
+			);
+		})
+	}
+</div>
+
+<script>
+	for (const root of document.querySelectorAll<HTMLElement>("[data-trial-chart]")) {
+		const tabs = root.querySelectorAll<HTMLButtonElement>("[data-trial-tab]");
+		const panels = root.querySelectorAll<HTMLElement>("[data-trial-panel]");
+		for (const tab of tabs) {
+			tab.addEventListener("click", () => {
+				const target = tab.dataset.trialTab;
+				for (const t of tabs) {
+					t.setAttribute("aria-selected", t === tab ? "true" : "false");
+				}
+				for (const p of panels) {
+					p.hidden = p.dataset.trialPanel !== target;
+				}
+			});
+		}
+	}
+</script>

@@ -1,0 +1,159 @@
+---
+import { workedExample } from "../data/benchmarks";
+
+const states = [
+	{
+		id: "byname",
+		label: "By name",
+		sub: "22m / 12m",
+		machines: workedExample.byName,
+		glow: false,
+		resultState: "plain",
+		status: "by name:",
+		output:
+			"22m vs 12m. Alphabetical order puts auth (9m), billing (7m), and checkout (6m) onto machine 0 while machine 1 sits idle for 10 minutes.",
+	},
+	{
+		id: "split",
+		label: "bunpo split",
+		sub: "17m / 17m",
+		machines: workedExample.byTiming,
+		glow: false,
+		resultState: "plain",
+		status: "bunpo:",
+		output:
+			"predicted machine loads from 17m0s to 17m0s, average 17m0s; longest file tests/test_auth.py at 9m0s\nbunpo: machine 0 of 2 gets 3 of 6 tests, predicted 17m0s\nCells stay plain here: each machine splits on its own before verify checks every manifest.",
+	},
+	{
+		id: "verified",
+		label: "bunpo verify",
+		sub: "passed",
+		machines: workedExample.byTiming,
+		glow: true,
+		resultState: "verified",
+		status: "assignment verified:",
+		output:
+			"6 tests across 2 machines, each assigned exactly once, all split from the same input and timings (digest 4e9a1b0f2c8d…)\nbunpo: this checks what each machine was asked to run, not what ran; check each runner's result and report separately",
+	},
+	{
+		id: "stale",
+		label: "Stale cache",
+		sub: "caught",
+		machines: workedExample.staleCache,
+		glow: false,
+		resultState: "error",
+		status: "bunpo verify: error:",
+		output:
+			"assignment check failed:\n  - machines split different inputs or used different timings: 4e9a1b0f2c8d… on machine 0; c710e3a98b44… on machine 1\n  - 1 test assigned to more than one machine: tests/test_auth.py (machines 0, 1)\n  - 1 test in the input but assigned to no machine: tests/test_checkout.py",
+	},
+];
+---
+
+<div class="hive-box" data-hive-demo>
+	<div class="tabs tabs-4" role="tablist" aria-label="Split and verify walkthrough">
+		{
+			states.map((s, idx) => (
+				<button
+					type="button"
+					class="tab-btn"
+					role="tab"
+					aria-selected={idx === 2 ? "true" : "false"}
+					aria-controls={`hive-panel-${s.id}`}
+					id={`hive-tab-${s.id}`}
+					data-hive-tab={s.id}
+				>
+					<span>{s.label}</span>
+					<span class="tab-sub">{s.sub}</span>
+				</button>
+			))
+		}
+	</div>
+
+	{
+		states.map((s, idx) => (
+			<div
+				id={`hive-panel-${s.id}`}
+				role="tabpanel"
+				aria-labelledby={`hive-tab-${s.id}`}
+				hidden={idx !== 2}
+				data-hive-panel={s.id}
+			>
+				<div class="hive-stage">
+					{s.machines.map((m) => (
+						<div class="machine-col">
+							<div class="machine-head">
+								<span>machine {m.machine}{"stale" in m && m.stale ? " (stale cache)" : ""}</span>
+								<span class="machine-total">{m.total}m</span>
+							</div>
+							<div class="cells-row">
+								{m.files.map((f) => {
+									const isDup = "duplicate" in f && f.duplicate;
+									const stroke = isDup ? "#B42D3F" : s.glow ? "#1F7A5A" : "#2B1F16";
+									const fill = s.glow ? "#F6ECD9" : "#FFFFFF";
+									const textFill = isDup ? "#B42D3F" : "#0D0C0B";
+									return (
+										<div class="cell-item">
+											<svg class="cell-svg" viewBox="0 0 60 54" aria-hidden="true">
+												{s.glow && (
+													<polygon
+														points="30,2 56,15 56,39 30,52 4,39 4,15"
+														fill="none"
+														stroke="#43A581"
+														stroke-opacity="0.32"
+														stroke-width="5"
+														stroke-linejoin="round"
+													/>
+												)}
+												<polygon
+													points="30,4 54,16 54,38 30,50 6,38 6,16"
+													fill={fill}
+													stroke={stroke}
+													stroke-width={s.glow || isDup ? "2" : "1.5"}
+													stroke-linejoin="round"
+												/>
+												{s.glow && (
+													<circle cx="30" cy="43" r="2" fill="#C47F17" />
+												)}
+												<text
+													x="30"
+													y="31"
+													text-anchor="middle"
+													fill={textFill}
+													font-family="IBM Plex Mono, monospace"
+													font-size="13"
+													font-weight="600"
+												>
+													{f.minutes}m
+												</text>
+											</svg>
+											<span class="cell-label">{f.name.replace("tests/test_", "").replace(".py", "")}</span>
+										</div>
+									);
+								})}
+							</div>
+						</div>
+					))}
+				</div>
+				<div class="plain-result" data-state={s.resultState}><span class="status-tag">{s.status}</span>{` ${s.output}`}</div>
+			</div>
+		))
+	}
+</div>
+
+<script>
+	for (const root of document.querySelectorAll<HTMLElement>("[data-hive-demo]")) {
+		const tabs = root.querySelectorAll<HTMLButtonElement>("[data-hive-tab]");
+		const panels = root.querySelectorAll<HTMLElement>("[data-hive-panel]");
+		for (const tab of tabs) {
+			tab.addEventListener("click", () => {
+				const target = tab.dataset.hiveTab;
+				for (const t of tabs) {
+					t.setAttribute("aria-selected", t === tab ? "true" : "false");
+				}
+				for (const p of panels) {
+					p.hidden = p.dataset.hivePanel !== target;
+				}
+			});
+		}
+	}
+</script>

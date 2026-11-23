@@ -1,0 +1,96 @@
+---
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
+import "@fontsource/ibm-plex-mono/600.css";
+import "@fontsource/ibm-plex-sans/400.css";
+import "@fontsource/ibm-plex-sans/500.css";
+import "@fontsource/ibm-plex-sans/600.css";
+import "@fontsource/newsreader/400.css";
+import "@fontsource/newsreader/500.css";
+import "@fontsource/newsreader/600.css";
+import "../styles/global.css";
+import { LATEST_VERSION } from "../data/releases";
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const {
+	title,
+	description = "Split test suites across parallel CI machines by recorded timings, and verify that every test file was assigned once.",
+} = Astro.props;
+
+const path = Astro.url.pathname;
+const nav = [
+	{ href: "/guides", label: "guides" },
+	{ href: "/benchmarks", label: "benchmarks" },
+	{ href: "/changelog", label: "changelog" },
+	{ href: "https://github.com/nuggocto/bunpo", label: "github", external: true },
+];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={Astro.url.href} />
+	</head>
+	<body>
+		<header class="site-header">
+			<div class="wrap header-inner">
+				<a href="/" class="brand-link" aria-label="Bunpō home">
+					<img src="/brand/logo-mark.svg" alt="" class="brand-mark" width="34" height="34" />
+					<span class="brand-name">Bunpō</span>
+				</a>
+				<nav class="site-nav" aria-label="Primary">
+					{
+						nav.map((item) => (
+							<a
+								href={item.href}
+								aria-current={
+									!item.external && (path === item.href || path.startsWith(`${item.href}/`))
+										? "page"
+										: undefined
+								}
+								target={item.external ? "_blank" : undefined}
+								rel={item.external ? "noreferrer" : undefined}
+							>
+								{item.label}
+							</a>
+						))
+					}
+				</nav>
+			</div>
+		</header>
+
+		<main>
+			<div class="wrap">
+				<slot />
+			</div>
+		</main>
+
+		<footer class="site-footer">
+			<div class="wrap footer-inner">
+				<div class="footer-brand">
+					<img src="/brand/logo-mono.svg" alt="" width="24" height="24" />
+					<span class="mono">bunpo {LATEST_VERSION} · Apache-2.0 · no server, no telemetry</span>
+				</div>
+				<div class="footer-links">
+					<a href="/guides">guides</a>
+					<a href="/benchmarks">benchmarks</a>
+					<a href="/changelog">changelog</a>
+					<a href="https://github.com/nuggocto/bunpo/releases" target="_blank" rel="noreferrer">releases</a>
+					<a href="https://github.com/nuggocto/bunpo" target="_blank" rel="noreferrer">source</a>
+				</div>
+			</div>
+		</footer>
+	</body>
+</html>

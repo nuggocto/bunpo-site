@@ -1,0 +1,44 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "../../layouts/Base.astro";
+
+export async function getStaticPaths() {
+	const guides = await getCollection("guides");
+	return guides.map((entry) => ({
+		params: { slug: entry.id },
+		props: { entry },
+	}));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const allGuides = (await getCollection("guides")).sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base title={`Bunpō with ${entry.data.title} — Bunpō`} description={entry.data.summary}>
+	<span class="eyebrow"><a href="/guides">guides</a> / {entry.id}</span>
+	<h1>Bunpō with {entry.data.title}</h1>
+	<p class="lead">
+		<span class="mono small">
+			report: {entry.data.reportFormat} · selection: {entry.data.selection}
+		</span>
+	</p>
+
+	<nav class="tabs tabs-5" aria-label="Other runner guides" style="margin-top: 1.5rem;">
+		{
+			allGuides.map((g) => (
+				<a
+					href={`/guides/${g.id}`}
+					class="tab-btn"
+					aria-selected={g.id === entry.id ? "true" : "false"}
+				>
+					{g.data.title}
+				</a>
+			))
+		}
+	</nav>
+
+	<article class="prose">
+		<Content />
+	</article>
+</Base>

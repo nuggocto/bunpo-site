@@ -1,0 +1,87 @@
+export interface Release {
+	version: string;
+	date: string;
+	summary: string;
+	url: string;
+	notes: string[];
+}
+
+export const LATEST_VERSION = "v0.0.6";
+
+export const releases: Release[] = [
+	{
+		version: "v0.0.6",
+		date: "2026-11-22",
+		summary: "CLI version flags, Playwright retry clarification, and live GitHub Actions trial.",
+		url: "https://github.com/nuggocto/bunpo/releases/tag/v0.0.6",
+		notes: [
+			"Accept -version and --version alongside bunpo version.",
+			"Archived the live GitHub Actions Playwright trial on LaTabdhir (68 specs across x64 and ARM64 self-hosted runners).",
+			"Corrected Playwright JUnit retry timing notes and documented heterogeneous self-hosted runners and queue delays.",
+		],
+	},
+	{
+		version: "v0.0.5",
+		date: "2026-11-22",
+		summary:
+			"Failed-file markers in --format lines, full-cost Vitest reporter, and 600x fewer split allocations.",
+		url: "https://github.com/nuggocto/bunpo/releases/tag/v0.0.5",
+		notes: [
+			'Support "-" in --format lines reports so failed files stay seen without recording a timing.',
+			"Added full-cost Vitest inline reporter and monorepo, coverage-threshold, sidecar, and filtered-suite guide sections.",
+			"Rejected null elements inside timings.json samples arrays and clamped report limitReader reads at the byte limit.",
+			"Added zero-allocation canonicalization, reused the SHA-256 digest buffer, and parsed valid JSON in a single pass (50k split: 252k to 403 allocations, ~49 ms to ~31 ms).",
+			"Paginated major-tag (@v0) lookups in scripts/install.sh and validated matched tags.",
+		],
+	},
+	{
+		version: "v0.0.4",
+		date: "2026-11-21",
+		summary:
+			"Stricter nested JSON validation, canonical timing keys, and Vitest file-based test lists.",
+		url: "https://github.com/nuggocto/bunpo/releases/tag/v0.0.4",
+		notes: [
+			"Required nested members in timings.json and run reports, rejected null shards in plan.json, and rejected non-canonical timing keys.",
+			"Deleted stale plan.json at the start of bunpo plan and validated --path-prefix upfront in bunpo record.",
+			"Switched the Vitest guide to BUNPO_TESTS_FILE=mine.txt to avoid Linux's 128 KiB env-var limit.",
+			"Renamed the Action to Bunpo for ASCII Marketplace search and hardened tag checks in the release workflow.",
+		],
+	},
+	{
+		version: "v0.0.3",
+		date: "2026-11-21",
+		summary:
+			"First public binary release, GitHub Action, five runner guides, and synthetic benchmarks.",
+		url: "https://github.com/nuggocto/bunpo/releases/tag/v0.0.3",
+		notes: [
+			"Cross-compiled static binaries (Linux, macOS, Windows on x86-64 and ARM64) with SHA256SUMS.",
+			"GitHub Action (nuggocto/bunpo@v0) that resolves tags, verifies checksums, and puts bunpo on PATH.",
+			"Guides for pytest, Jest, Vitest, RSpec, and Playwright checked against real runners with guidecheck.",
+			"GitHub Actions workflow annotations (::warning::, ::error::, ::notice::) and NO_COLOR-aware terminal labels.",
+		],
+	},
+	{
+		version: "v0.0.2",
+		date: "2026-11-20",
+		summary:
+			"Complete CLI (split, plan, record, merge, verify), bounded JUnit reader, and manifests.",
+		url: "https://github.com/nuggocto/bunpo/releases/tag/v0.0.2",
+		notes: [
+			"Added split, plan, record, merge, verify, and version with 0/1/2 exit codes.",
+			"Bounded JUnit XML and two-column report readers using exact rational sums rounded half up once per file.",
+			"Atomic writes (temp file, fsync, rename) and os.Root directory confinement.",
+			"Eight-process end-to-end tests covering stale caches, skipped runners, dominant files, and empty shards.",
+		],
+	},
+	{
+		version: "v0.0.1",
+		date: "2026-11-20",
+		summary: "Core integer-only split engine and strict timing file format.",
+		url: "https://github.com/nuggocto/bunpo/releases/tag/v0.0.1",
+		notes: [
+			"Canonical POSIX/Windows test identifiers with collision detection, longest-first dealing, and SHA-256 split digests.",
+			"Strict versioned JSON timing file (encoding/json/v2), integer half-up median over 5 samples, and pruning after 30 unseen runs.",
+			"2,000-seed property tests, brute-force optimal makespan oracle verifying the 4/3 bound, and fuzzers.",
+		],
+	},
+];
