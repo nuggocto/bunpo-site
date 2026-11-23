@@ -10,16 +10,16 @@ const actionPinned = `- uses: nuggocto/bunpo@v0
     version: ${LATEST_VERSION}`;
 
 const linuxInstall = `ARCH=amd64 # or arm64
-curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-linux-$ARCH
-curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS
-sha256sum --ignore-missing -c SHA256SUMS
-chmod +x bunpo-linux-$ARCH && mv bunpo-linux-$ARCH /usr/local/bin/bunpo`;
+curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-linux-$ARCH && \\
+curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS && \\
+sha256sum --ignore-missing -c SHA256SUMS && \\
+chmod +x bunpo-linux-$ARCH && sudo mv bunpo-linux-$ARCH /usr/local/bin/bunpo`;
 
 const macosInstall = `ARCH=arm64 # or amd64 for Intel
-curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-darwin-$ARCH
-curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS
-shasum -a 256 --ignore-missing -c SHA256SUMS
-chmod +x bunpo-darwin-$ARCH && mv bunpo-darwin-$ARCH /usr/local/bin/bunpo`;
+curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-darwin-$ARCH && \\
+curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS && \\
+shasum -a 256 --ignore-missing -c SHA256SUMS && \\
+chmod +x bunpo-darwin-$ARCH && sudo mv bunpo-darwin-$ARCH /usr/local/bin/bunpo`;
 
 const windowsInstall = `$arch = "amd64" # or arm64
 $base = "https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}"
@@ -28,6 +28,7 @@ Invoke-WebRequest "$base/SHA256SUMS" -OutFile "SHA256SUMS"
 $expected = (Select-String "bunpo-windows-$arch.exe" SHA256SUMS).Line.Split()[0]
 $actual = (Get-FileHash "bunpo-windows-$arch.exe" -Algorithm SHA256).Hash.ToLower()
 if ($actual -ne $expected) { throw "checksum mismatch" }
+New-Item -ItemType Directory -Force "$env:USERPROFILE\\bin" | Out-Null
 Move-Item "bunpo-windows-$arch.exe" "$env:USERPROFILE\\bin\\bunpo.exe" -Force`;
 
 const sourceInstall = `go install github.com/nuggocto/bunpo/cmd/bunpo@${LATEST_VERSION}`;

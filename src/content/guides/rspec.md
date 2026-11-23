@@ -106,7 +106,7 @@ jobs:
         run: find spec -name '*_spec.rb' | bunpo verify
       - name: Merge timings
         run: bunpo merge
-      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test.result == 'success' }}
         uses: actions/cache/save@v6
         with:
           path: .bunpo/timings.json
@@ -126,8 +126,10 @@ jobs:
   that all machines split the same input and that each file was assigned
   exactly once. `bunpo merge` folds the times into the timing file and fails
   if a machine's report is missing.
-- **Only `main` saves timings.** Pull requests read them and never overwrite
-  them. Each save uses a new cache key, and `restore-keys` picks the newest.
+- **Only passing `main` runs save timings.** Pull requests read them and never
+  overwrite them, and failed `main` runs leave the previous cache intact so
+  "Re-run failed jobs" restores the same split. Each save uses a new cache key,
+  and `restore-keys` picks the newest.
 
 Change `machine: [0, 1, 2, 3]` to use more or fewer machines. The actions are
 shown by tag; if you pin `nuggocto/bunpo` to a commit SHA, also pass
@@ -147,6 +149,12 @@ pinned too.
   `test` machines and collate results in the final job.
 - **Remove any existing sharding.** Disable any existing test splitter before
   enabling Bunpō so specs are not filtered twice.
+- **Busy queues and concurrent pushes (`bunpo plan`).** If another `main` run
+  saves newer timings while one of your shards is still waiting for a runner,
+  the late shard restores a different cache and `verify` fails. To freeze one
+  split for the whole workflow, run `bunpo plan --total M` in an upfront job,
+  upload `.bunpo/plan.json`, and run `bunpo split --index "$INDEX" --plan` on
+  each machine.
 
 ## If something fails
 

@@ -23,6 +23,10 @@ second run on, each machine gets a balanced share.
 - Playwright reads file arguments as regular expressions, so
   `tests/a.spec.ts` would also run `tests/x/tests/a.spec.ts`. The share goes
   through `--test-list` instead, which matches files exactly.
+- The `find` command below covers Playwright's default `*.spec.*` and
+  `*.test.*` extensions (`.ts`, `.js`, `.mjs`). If your `testMatch` uses
+  other extensions (such as `.tsx`) or filters, use `npx playwright test --list --reporter=json`
+  under Common setups.
 
 ## The workflow
 
@@ -68,7 +72,7 @@ jobs:
           TOTAL: ${{ strategy.job-total }}
           PLAYWRIGHT_JUNIT_OUTPUT_FILE: junit.xml
         run: |
-          find tests -name '*.spec.ts' -o -name '*.spec.js' | bunpo split --index "$INDEX" --total "$TOTAL" > mine.txt
+          find tests -type f \( -name '*.spec.ts' -o -name '*.spec.js' -o -name '*.spec.mjs' -o -name '*.test.ts' -o -name '*.test.js' -o -name '*.test.mjs' \) | bunpo split --index "$INDEX" --total "$TOTAL" > mine.txt
           mine=()
           while IFS= read -r path; do mine+=("$path"); done < mine.txt
 
@@ -111,10 +115,10 @@ jobs:
           path: .bunpo
           merge-multiple: true
       - name: Verify the assignment
-        run: find tests -name '*.spec.ts' -o -name '*.spec.js' | bunpo verify
+        run: find tests -type f \( -name '*.spec.ts' -o -name '*.spec.js' -o -name '*.spec.mjs' -o -name '*.test.ts' -o -name '*.test.js' -o -name '*.test.mjs' \) | bunpo verify
       - name: Merge timings
         run: bunpo merge
-      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test.result == 'success' }}
         uses: actions/cache/save@v6
         with:
           path: .bunpo/timings.json
@@ -134,8 +138,10 @@ jobs:
   that all machines split the same input and that each file was assigned
   exactly once. `bunpo merge` folds the times into the timing file and fails
   if a machine's report is missing.
-- **Only `main` saves timings.** Pull requests read them and never overwrite
-  them. Each save uses a new cache key, and `restore-keys` picks the newest.
+- **Only passing `main` runs save timings.** Pull requests read them and never
+  overwrite them, and failed `main` runs leave the previous cache intact so
+  "Re-run failed jobs" restores the same split. Each save uses a new cache key,
+  and `restore-keys` picks the newest.
 
 Change `machine: [0, 1, 2, 3]` to use more or fewer machines. The actions are
 shown by tag; if you pin `nuggocto/bunpo` to a commit SHA, also pass
@@ -189,6 +195,12 @@ pinned too.
   the slowest shard's wall time separately from runner queue delay.
 - **Remove any existing sharding.** Drop Playwright's `--shard` flag before
   enabling Bunpō so the suite is not filtered twice.
+- **Busy queues and concurrent pushes (`bunpo plan`).** If another `main` run
+  saves newer timings while one of your shards is still waiting for a runner,
+  the late shard restores a different cache and `verify` fails. To freeze one
+  split for the whole workflow, run `bunpo plan --total M` in an upfront job,
+  upload `.bunpo/plan.json`, and run `bunpo split --index "$INDEX" --plan` on
+  each machine.
 
 ## If something fails
 
