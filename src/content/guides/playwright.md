@@ -91,7 +91,7 @@ jobs:
           # anchored, escaped expression matching only itself.
           patterns=()
           while IFS= read -r pattern; do patterns+=("$pattern"); done < <(
-            awk -v dir="$PWD/" '{ print dir $0 }' mine.txt |
+            awk -v dir="$(pwd -P)/" '{ print dir $0 }' mine.txt |
               sed -e 's/[][\.*^$+?(){}|/]/\\&/g' -e 's/^/\/^/' -e 's/$/$\//'
           )
           npx playwright test --reporter=list,junit "${patterns[@]}" || status=$?
@@ -179,6 +179,24 @@ pinned too.
 
   Writing to `PLAYWRIGHT_JSON_OUTPUT_NAME` avoids broken JSON when `dotenv` or
   a config script prints a banner line to stdout.
+- **Setup projects (`dependencies` / `auth.setup.ts`).** If your config has a
+  setup project that other projects depend on, Playwright runs it on every
+  machine and `bunpo record` exits `1` because the setup file was not assigned
+  to that machine. Keep setup files out of the split input (the default `find`
+  already skips `*.setup.*`; with `--list`, filter to the non-setup project),
+  run the setup project first without JUnit, then run the split specs with
+  `--no-deps`:
+
+  ```bash
+  npx playwright test --project=setup --reporter=list
+  npx playwright test --no-deps --reporter=list,junit "${patterns[@]}" || status=$?
+  ```
+
+  Store login or auth state outside `test-results/` (for example
+  `playwright/.auth/user.json`), because the second Playwright command clears
+  `test-results/` on startup. If you also have a `teardown` project, run it
+  after `bunpo record`, since `--no-deps` skips project dependencies in both
+  directions.
 - **Multi-project suites and multiple `workers`.** When several Playwright
   projects run the same spec files (for example desktop and mobile viewports
   sharing `tests/smoke/`), `bunpo record` sums all projects' case durations

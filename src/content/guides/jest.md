@@ -66,7 +66,7 @@ jobs:
           JEST_JUNIT_OUTPUT_NAME: junit.xml
           JEST_JUNIT_ADD_FILE_ATTRIBUTE: "true"
         run: |
-          npx jest --listTests | sed "s|^$PWD/||" | bunpo split --index "$INDEX" --total "$TOTAL" > mine.txt
+          npx jest --listTests | sed "s|^$(pwd -P)/||" | bunpo split --index "$INDEX" --total "$TOTAL" > mine.txt
           mine=()
           while IFS= read -r path; do mine+=("$path"); done < mine.txt
 
@@ -82,7 +82,7 @@ jobs:
           # path becomes an anchored, escaped expression matching only itself.
           patterns=()
           while IFS= read -r pattern; do patterns+=("$pattern"); done < <(
-            awk -v dir="$PWD/" '{ print dir $0 }' mine.txt |
+            awk -v dir="$(pwd -P)/" '{ print dir $0 }' mine.txt |
               sed -e 's/[][\.*^$+?(){}|]/\\&/g' -e 's/^/^/' -e 's/$/$/'
           )
           npx jest --ci --reporters=default --reporters=jest-junit -- "${patterns[@]}" || status=$?
@@ -119,7 +119,7 @@ jobs:
           path: .bunpo
           merge-multiple: true
       - name: Verify the assignment
-        run: npx jest --listTests | sed "s|^$PWD/||" | bunpo verify
+        run: npx jest --listTests | sed "s|^$(pwd -P)/||" | bunpo verify
       - name: Merge timings
         run: bunpo merge
       - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test.result == 'success' }}
