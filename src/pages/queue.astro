@@ -5,9 +5,9 @@ import Base from "../layouts/Base.astro";
 const workerCommands = `cd worker
 npm ci --ignore-scripts
 npx wrangler login
+npx wrangler deploy
 npx wrangler secret put BUNPO_QUEUE_TOKEN
-npx wrangler secret put BUNPO_QUEUE_READ_TOKEN
-npx wrangler deploy`;
+npx wrangler secret put BUNPO_QUEUE_READ_TOKEN`;
 
 const serverCommands = `export BUNPO_QUEUE_TOKEN=$(openssl rand -hex 32)
 export BUNPO_QUEUE_READ_TOKEN=$(openssl rand -hex 32)
