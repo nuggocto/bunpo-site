@@ -73,6 +73,8 @@ describe("site content & data integrity", () => {
 			expect(text).toContain("shell: bash");
 			expect(text).toContain("nuggocto/bunpo@v0");
 			expect(text).toContain(LATEST_VERSION);
+			expect(text).toContain("## Live queue");
+			expect(text).toContain("0.1.0");
 		}
 	});
 
@@ -139,6 +141,10 @@ describe("built static output (when dist/ exists)", () => {
 		for (const page of [
 			"dist/index.html",
 			"dist/install/index.html",
+			"dist/cli/index.html",
+			"dist/queue/index.html",
+			"dist/llms.txt",
+			"dist/llms-full.txt",
 			"dist/404.html",
 			"dist/guides/index.html",
 			"dist/guides/pytest/index.html",
@@ -164,6 +170,23 @@ describe("built static output (when dist/ exists)", () => {
 		]) {
 			expect(existsSync(page), `missing built artifact: ${page}`).toBe(true);
 		}
+
+		const sitemap = readFileSync("dist/sitemap.xml", "utf8");
+		expect(sitemap).toContain("https://bunpo.org/cli/");
+		expect(sitemap).toContain("https://bunpo.org/queue/");
+
+		const llms = readFileSync("dist/llms.txt", "utf8");
+		expect(llms).toContain("https://bunpo.org/cli/");
+		expect(llms).toContain("https://bunpo.org/queue/");
+		expect(llms).toContain("https://bunpo.org/llms-full.txt");
+		expect(llms).toContain("upcoming in 0.1.0");
+
+		const llmsFull = readFileSync("dist/llms-full.txt", "utf8");
+		expect(llmsFull).toContain("bunpo split");
+		expect(llmsFull).toContain("bunpo --queue");
+		expect(llmsFull).toContain("bunpo-server");
+		expect(llmsFull).toContain("Guide: Bunpō with pytest");
+		expect(llmsFull).toContain("Guide: Bunpō with Playwright");
 	});
 
 	test.if(hasDist)("every brand image URL carries a content hash", () => {

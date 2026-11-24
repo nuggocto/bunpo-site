@@ -6,6 +6,8 @@ export const GET: APIRoute = async ({ site }) => {
 	const paths = [
 		"/",
 		"/install/",
+		"/cli/",
+		"/queue/",
 		"/guides/",
 		...guides.map((g) => `/guides/${g.id}/`),
 		"/benchmarks/",
