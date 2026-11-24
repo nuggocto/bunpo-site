@@ -176,6 +176,128 @@ pinned too.
   `bunpo split --index "$INDEX" --plan`, and download the same snapshot in the
   final job before `bunpo merge`.
 
+## Live queue
+
+Requires **Bunpō 0.1.0 or later**. If your machines have uneven speeds, start
+at different times, or can be preempted, run Bunpō in live-queue mode against
+`bunpo-server` or the Cloudflare Worker instead of static splitting. Prefer
+static splitting when machines are equal and start together, in repositories
+that accept fork pull requests, or when your suite has very slow per-batch
+startup.
+
+GitHub Actions withholds secrets from fork pull requests, so this workflow
+fails on forks with a missing-token error—that is the safe outcome. Use the
+static workflow above if your repository accepts fork pull requests, and never
+add an `if:` condition that can skip the required `bunpo` job, because GitHub
+counts a skipped required check as passed.
+
+If a machine is killed mid-run, its own `test` matrix job stays red in GitHub
+Actions even when the remaining machines finish the build cleanly. Make the
+`bunpo` job your required branch-protection check rather than the `test` matrix
+jobs, and keep `if: ${{ !cancelled() }}` on `bunpo` so a lost machine never
+skips it.
+
+Each leased batch starts a fresh Jest process, so `globalSetup`,
+`globalTeardown`, and `setupFilesAfterEnv` run once per batch rather than once
+per machine. Move slow one-time setup (such as starting a server or seeding a
+database) to a workflow step before `bunpo --queue`, or stay on static
+splitting if per-batch startup dominates.
+
+Save this helper as `run-batch.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+patterns=()
+while IFS= read -r pattern; do
+  [ -n "$pattern" ] && patterns+=("$pattern")
+done < <(
+  awk -v dir="$(pwd -P)/" 'length($0) > 0 { print dir $0 }' "$BUNPO_TESTS_FILE" |
+    sed -e 's/[][\.*^$+?(){}|]/\\&/g' -e 's/^/^/' -e 's/$/$/'
+)
+
+# Given no files, Jest would run the whole suite.
+if [ "${#patterns[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+export JEST_JUNIT_OUTPUT_NAME=junit.xml
+export JEST_JUNIT_ADD_FILE_ATTRIBUTE=true
+exec npx jest --ci --reporters=default --reporters=jest-junit -- "${patterns[@]}"
+```
+
+Then point the workflow at your queue server (`BUNPO_QUEUE_URL` repository
+variable, plus `BUNPO_QUEUE_TOKEN` and `BUNPO_QUEUE_READ_TOKEN` secrets):
+
+```yaml
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [0, 1, 2, 3]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: npm ci
+      - uses: nuggocto/bunpo@v0
+      - uses: actions/cache/restore@v6
+        with:
+          path: .bunpo/timings.json
+          key: bunpo-timings-${{ github.sha }}
+          restore-keys: bunpo-timings-
+      - name: Run tests from the live queue
+        env:
+          INDEX: ${{ strategy.job-index }}
+          TOTAL: ${{ strategy.job-total }}
+          BUNPO_QUEUE_URL: ${{ vars.BUNPO_QUEUE_URL }}
+          BUNPO_QUEUE_TOKEN: ${{ secrets.BUNPO_QUEUE_TOKEN }}
+        run: |
+          npx jest --listTests | sed "s|^$(pwd -P)/||" |
+            bunpo --queue "$BUNPO_QUEUE_URL" --build "$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+              --index "$INDEX" --total "$TOTAL" --report junit.xml -- bash run-batch.sh
+
+  bunpo:
+    needs: test
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: nuggocto/bunpo@v0
+      - uses: actions/cache/restore@v6
+        with:
+          path: .bunpo/timings.json
+          key: bunpo-timings-${{ github.sha }}
+          restore-keys: bunpo-timings-
+      - name: Check build status
+        env:
+          BUNPO_QUEUE_URL: ${{ vars.BUNPO_QUEUE_URL }}
+          BUNPO_QUEUE_READ_TOKEN: ${{ secrets.BUNPO_QUEUE_READ_TOKEN }}
+        run: bunpo --queue "$BUNPO_QUEUE_URL" --build "$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --status
+      - name: Merge timings
+        run: bunpo merge
+      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test.result == 'success' }}
+        uses: actions/cache/save@v6
+        with:
+          path: .bunpo/timings.json
+          key: bunpo-timings-${{ github.run_id }}-${{ github.run_attempt }}
+```
+
 ## If something fails
 
 - **`record` says files were not assigned to this machine.** The runner ran

@@ -170,13 +170,11 @@ pinned too.
   warns that excluded files stayed unrecorded. To list only the files
   Playwright will actually run, write the JSON list to a file and extract the
   paths with `jq` (both in the `test` job and in `bunpo verify`):
-
   ```bash
   PLAYWRIGHT_JSON_OUTPUT_NAME=list.json \
     npx playwright test --list --project=chromium --grep-invert @payments --reporter=json >/dev/null
   jq -r '.suites[].file' list.json | sed 's|^|tests/|' | sort -u | bunpo split --index "$INDEX" --total "$TOTAL" > mine.txt
   ```
-
   Writing to `PLAYWRIGHT_JSON_OUTPUT_NAME` avoids broken JSON when `dotenv` or
   a config script prints a banner line to stdout.
 - **Setup projects (`dependencies` / `auth.setup.ts`).** If your config has a
@@ -186,12 +184,10 @@ pinned too.
   already skips `*.setup.*`; with `--list`, filter to the non-setup project),
   run the setup project first without JUnit, then run the split specs with
   `--no-deps`:
-
   ```bash
   npx playwright test --project=setup --no-deps --reporter=list
   npx playwright test --no-deps --reporter=list,junit "${patterns[@]}" || status=$?
   ```
-
   Store login or auth state outside `test-results/` (for example
   `playwright/.auth/user.json`), because the second Playwright command clears
   `test-results/` on startup. If you also have a `teardown` project, run it
@@ -231,6 +227,145 @@ pinned too.
   download that artifact into `.bunpo` on each `test` machine and run
   `bunpo split --index "$INDEX" --plan`, and download the same snapshot in the
   final job before `bunpo merge`.
+
+## Live queue
+
+Requires **Bunpō 0.1.0 or later**. If your machines have uneven speeds, start
+at different times, or can be preempted, run Bunpō in live-queue mode against
+`bunpo-server` or the Cloudflare Worker instead of static splitting. Prefer
+static splitting when machines are equal and start together, in repositories
+that accept fork pull requests, or when your suite has very slow per-batch
+startup.
+
+GitHub Actions withholds secrets from fork pull requests, so this workflow
+fails on forks with a missing-token error—that is the safe outcome. Use the
+static workflow above if your repository accepts fork pull requests, and never
+add an `if:` condition that can skip the required `bunpo` job, because GitHub
+counts a skipped required check as passed.
+
+If a machine is killed mid-run, its own `test` matrix job stays red in GitHub
+Actions even when the remaining machines finish the build cleanly. Make the
+`bunpo` job your required branch-protection check rather than the `test` matrix
+jobs, and keep `if: ${{ !cancelled() }}` on `bunpo` so a lost machine never
+skips it.
+
+Pay attention to how Playwright setup hooks behave across batches:
+
+- **Setup projects and `dependencies`.** Without `--no-deps`, Playwright runs
+  dependent setup projects on every batch and writes the setup file into
+  `junit.xml`. Bunpō rejects that file as unassigned and fails the batch.
+  Instead, keep `*.setup.*` out of discovery (the `find` command below already
+  excludes them), run the setup project once per machine before `bunpo --queue`
+  without JUnit (`npx playwright test --project=setup --no-deps --reporter=list`),
+  pass `--no-deps` in `run-batch.sh`, and run any `teardown` project once after
+  `bunpo --queue` (`npx playwright test --project=teardown --no-deps --reporter=list`).
+  Save auth state outside `test-results/` (for example
+  `playwright/.auth/user.json`), because Playwright clears `test-results/` at
+  the start of every batch.
+- **`globalSetup` and `globalTeardown`.** Playwright does not emit `<testcase>`
+  entries for `globalSetup`, so it does not cause extra-file errors, but it
+  runs **once per batch** (on every `playwright test` invocation, not once per
+  machine). Keep `globalSetup` fast and idempotent, move expensive one-time
+  machine setup (such as starting a server or seeding a database) to a workflow
+  step before `bunpo --queue`, or stay on static splitting if `globalSetup` is
+  slow and cannot be moved out.
+
+Save this helper as `run-batch.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+patterns=()
+while IFS= read -r pattern; do
+  [ -n "$pattern" ] && patterns+=("$pattern")
+done < <(
+  awk -v dir="$(pwd -P)/" 'length($0) > 0 { print dir $0 }' "$BUNPO_TESTS_FILE" |
+    sed -e 's/[][\.*^$+?(){}|/]/\\&/g' -e 's/^/\/^/' -e 's/$/$\//'
+)
+
+# Given no files, Playwright would run the whole suite.
+if [ "${#patterns[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+export PLAYWRIGHT_JUNIT_OUTPUT_FILE=junit.xml
+exec npx playwright test --no-deps --reporter=list,junit "${patterns[@]}"
+```
+
+Then point the workflow at your queue server (`BUNPO_QUEUE_URL` repository
+variable, plus `BUNPO_QUEUE_TOKEN` and `BUNPO_QUEUE_READ_TOKEN` secrets). If
+you use a setup project, run `npx playwright test --project=setup --no-deps --reporter=list`
+in a step before `Run tests from the live queue`:
+
+```yaml
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [0, 1, 2, 3]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - uses: nuggocto/bunpo@v0
+      - uses: actions/cache/restore@v6
+        with:
+          path: .bunpo/timings.json
+          key: bunpo-timings-${{ github.sha }}
+          restore-keys: bunpo-timings-
+      - name: Run tests from the live queue
+        env:
+          INDEX: ${{ strategy.job-index }}
+          TOTAL: ${{ strategy.job-total }}
+          BUNPO_QUEUE_URL: ${{ vars.BUNPO_QUEUE_URL }}
+          BUNPO_QUEUE_TOKEN: ${{ secrets.BUNPO_QUEUE_TOKEN }}
+        run: |
+          find tests \( -name '*.spec.[jt]s' -o -name '*.spec.[jt]sx' -o -name '*.spec.[cm][jt]s' -o -name '*.spec.[cm][jt]sx' -o -name '*.test.[jt]s' -o -name '*.test.[jt]sx' -o -name '*.test.[cm][jt]s' -o -name '*.test.[cm][jt]sx' \) |
+            bunpo --queue "$BUNPO_QUEUE_URL" --build "$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+              --index "$INDEX" --total "$TOTAL" --report junit.xml --file-from classname --path-prefix tests -- bash run-batch.sh
+
+  bunpo:
+    needs: test
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: nuggocto/bunpo@v0
+      - uses: actions/cache/restore@v6
+        with:
+          path: .bunpo/timings.json
+          key: bunpo-timings-${{ github.sha }}
+          restore-keys: bunpo-timings-
+      - name: Check build status
+        env:
+          BUNPO_QUEUE_URL: ${{ vars.BUNPO_QUEUE_URL }}
+          BUNPO_QUEUE_READ_TOKEN: ${{ secrets.BUNPO_QUEUE_READ_TOKEN }}
+        run: bunpo --queue "$BUNPO_QUEUE_URL" --build "$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --status
+      - name: Merge timings
+        run: bunpo merge
+      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test.result == 'success' }}
+        uses: actions/cache/save@v6
+        with:
+          path: .bunpo/timings.json
+          key: bunpo-timings-${{ github.run_id }}-${{ github.run_attempt }}
+```
 
 ## If something fails
 
