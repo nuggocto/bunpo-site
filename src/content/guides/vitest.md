@@ -38,48 +38,48 @@ import type { Reporter } from "vitest/node";
 // Set by the CI workflow to the file listing this machine's share. include
 // takes glob patterns, so each path is escaped to match only itself.
 const bunpo = process.env.BUNPO_TESTS_FILE
-  ? readFileSync(process.env.BUNPO_TESTS_FILE, "utf8")
-      .split("\n")
-      .filter(Boolean)
-      .map((file) => file.replace(/[*?[\]{}()!+@\\]/g, "\\$&"))
-  : undefined;
+	? readFileSync(process.env.BUNPO_TESTS_FILE, "utf8")
+			.split("\n")
+			.filter(Boolean)
+			.map((file) => file.replace(/[*?[\]{}()!+@\\]/g, "\\$&"))
+	: undefined;
 
 // Writes each passing file's full cost (environment, imports, setup, and tests)
 // in milliseconds, and "-" for failed files so they stay seen without a time.
 // Vitest's JUnit report leaves out imports and setup.
 const bunpoTimes: string[] = [];
 const bunpoReporter: Reporter = {
-  onTestModuleEnd(mod) {
-    if (mod.state() === "failed") {
-      bunpoTimes.push(`${mod.relativeModuleId} -`);
-      return;
-    }
-    const d = mod.diagnostic();
-    const ms = Math.max(
-      0,
-      Math.round(
-        d.environmentSetupDuration +
-          d.prepareDuration +
-          d.collectDuration +
-          d.setupDuration +
-          d.duration,
-      ),
-    );
-    bunpoTimes.push(`${mod.relativeModuleId} ${ms}`);
-  },
-  onTestRunEnd() {
-    writeFileSync("bunpo-times.txt", bunpoTimes.length ? bunpoTimes.join("\n") + "\n" : "");
-  },
+	onTestModuleEnd(mod) {
+		if (mod.state() === "failed") {
+			bunpoTimes.push(`${mod.relativeModuleId} -`);
+			return;
+		}
+		const d = mod.diagnostic();
+		const ms = Math.max(
+			0,
+			Math.round(
+				d.environmentSetupDuration +
+					d.prepareDuration +
+					d.collectDuration +
+					d.setupDuration +
+					d.duration,
+			),
+		);
+		bunpoTimes.push(`${mod.relativeModuleId} ${ms}`);
+	},
+	onTestRunEnd() {
+		writeFileSync("bunpo-times.txt", bunpoTimes.length ? bunpoTimes.join("\n") + "\n" : "");
+	},
 };
 
 export default defineConfig({
-  test: {
-    // ...your existing options
-    ...(bunpo && {
-      include: bunpo,
-      reporters: ["default", bunpoReporter],
-    }),
-  },
+	test: {
+		// ...your existing options
+		...(bunpo && {
+			include: bunpo,
+			reporters: ["default", bunpoReporter],
+		}),
+	},
 });
 ```
 

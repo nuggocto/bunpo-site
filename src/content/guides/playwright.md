@@ -170,11 +170,13 @@ pinned too.
   warns that excluded files stayed unrecorded. To list only the files
   Playwright will actually run, write the JSON list to a file and extract the
   paths with `jq` (both in the `test` job and in `bunpo verify`):
+
   ```bash
   PLAYWRIGHT_JSON_OUTPUT_NAME=list.json \
     npx playwright test --list --project=chromium --grep-invert @payments --reporter=json >/dev/null
   jq -r '.suites[].file' list.json | sed 's|^|tests/|' | sort -u | bunpo split --index "$INDEX" --total "$TOTAL" > mine.txt
   ```
+
   Writing to `PLAYWRIGHT_JSON_OUTPUT_NAME` avoids broken JSON when `dotenv` or
   a config script prints a banner line to stdout.
 - **Setup projects (`dependencies` / `auth.setup.ts`).** If your config has a
@@ -184,10 +186,12 @@ pinned too.
   already skips `*.setup.*`; with `--list`, filter to the non-setup project),
   run the setup project first without JUnit, then run the split specs with
   `--no-deps`:
+
   ```bash
   npx playwright test --project=setup --no-deps --reporter=list
   npx playwright test --no-deps --reporter=list,junit "${patterns[@]}" || status=$?
   ```
+
   Store login or auth state outside `test-results/` (for example
   `playwright/.auth/user.json`), because the second Playwright command clears
   `test-results/` on startup. If you also have a `teardown` project, run it
