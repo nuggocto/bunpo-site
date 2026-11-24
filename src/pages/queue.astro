@@ -1,0 +1,143 @@
+---
+import CopyBlock from "../components/CopyBlock.astro";
+import Base from "../layouts/Base.astro";
+
+const workerCommands = `cd worker
+npm ci --ignore-scripts
+npx wrangler login
+npx wrangler secret put BUNPO_QUEUE_TOKEN
+npx wrangler secret put BUNPO_QUEUE_READ_TOKEN
+npx wrangler deploy`;
+
+const serverCommands = `export BUNPO_QUEUE_TOKEN=$(openssl rand -hex 32)
+export BUNPO_QUEUE_READ_TOKEN=$(openssl rand -hex 32)
+bunpo-server --addr 127.0.0.1:8080 --data /var/lib/bunpo`;
+
+const runnerExample = `find tests \\( -name 'test_*.py' -o -name '*_test.py' \\) | \\
+  bunpo --queue "$BUNPO_QUEUE_URL" --build "$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \\
+    --index "$INDEX" --total "$TOTAL" --report junit.xml -- bash run-batch.sh`;
+---
+
+<Base
+	title="Live queue (upcoming in 0.1.0) — Bunpō"
+	description="Self-hosted dynamic test queue for mixed-speed, late-starting, or preemptible CI runners. Upcoming in Bunpō 0.1.0."
+>
+	<span class="eyebrow">live queue · upcoming in 0.1.0</span>
+	<h1>Self-hosted live queue</h1>
+	<p class="lead">
+		Coming in <code>0.1.0</code> (not yet released; the current release is <code>v0.0.7</code>).{" "}
+		<code>bunpo --queue</code> pulls batches of test files dynamically as each machine finishes,
+		and reassigns leases when a runner dies or loses a report.
+	</p>
+
+	<section class="band" id="when-to-use" style="margin-top: 2rem;">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Static vs. queue</strong>
+				<span>Pick the simpler tool</span>
+			</div>
+			<div>
+				<h2>Use static splitting unless your machines drift apart.</h2>
+				<p>
+					Dynamic batching starts your test runner more than once per machine. When identical
+					machines start together, static splitting (<code>bunpo split</code> /{" "}
+					<code>verify</code>) finishes faster, needs no server, and works on fork pull requests
+					without secrets.
+				</p>
+				<div class="table-wrap">
+					<table>
+						<thead>
+							<tr>
+								<th>4-machine scenario (5 s batch startup)</th>
+								<th>Static split</th>
+								<th>Live queue</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Equal machines starting together</td>
+								<td><strong>827 s</strong></td>
+								<td>902 s</td>
+							</tr>
+							<tr>
+								<td>Mixed speeds (1.8× and 1×)</td>
+								<td>1,077 s</td>
+								<td><strong>850 s</strong></td>
+							</tr>
+							<tr>
+								<td>One machine starts 5 minutes late</td>
+								<td>1,127 s</td>
+								<td><strong>976 s</strong></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="servers">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Two servers</strong>
+				<span>Same protocol &amp; UI</span>
+			</div>
+			<div>
+				<h2>Cloudflare Worker or standalone Go binary.</h2>
+				<p>
+					Both backends speak the exact same HTTP JSON v1 protocol and serve the same static
+					read-only web dashboard (recent builds, per-machine lease timeline, slowest files,
+					and attempt history). Nothing is coupled to a vendor.
+				</p>
+				<CopyBlock label="Cloudflare Worker (zero-ops, SQLite Durable Objects)" code={workerCommands} />
+				<CopyBlock label="Standalone Go server (put TLS in front)" code={serverCommands} />
+				<p class="small muted">
+					Full setup, systemd unit, backups, token rotation, and Cloudflare Free-plan limits live
+					in{" "}
+					<a
+						href="https://github.com/nuggocto/bunpo/blob/shrek/docs/self-hosting.md"
+						target="_blank"
+						rel="noreferrer"
+					>
+						docs/self-hosting.md
+					</a>
+					.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="ci-usage">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>In CI</strong>
+				<span>Runner &amp; status job</span>
+			</div>
+			<div>
+				<h2>One worker command per machine, one status job at the end.</h2>
+				<p>
+					Each machine pipes its test list into <code>bunpo --queue</code> with{" "}
+					<code>BUNPO_QUEUE_TOKEN</code>. Bunpō strips queue tokens from the child test command,
+					sends heartbeats at <code>lease_ttl / 3</code>, and reports results per batch. A final
+					job runs <code>bunpo --queue ... --status</code> with{" "}
+					<code>BUNPO_QUEUE_READ_TOKEN</code> to print the verdict and write{" "}
+					<code>report-0.json</code> for <code>bunpo merge</code>.
+				</p>
+				<CopyBlock label="Worker step (pytest example)" code={runnerExample} />
+				<p class="small">
+					See the <strong>Live queue</strong> section in any{" "}
+					<a href="/guides">runner guide</a> (pytest, Jest, Vitest, RSpec, Playwright), check all
+					flags in the <a href="/cli">CLI reference</a>, or read the{" "}
+					<a
+						href="https://github.com/nuggocto/bunpo/blob/shrek/docs/queue-protocol.md"
+						target="_blank"
+						rel="noreferrer"
+					>
+						HTTP protocol specification
+					</a>
+					.
+				</p>
+			</div>
+		</div>
+	</section>
+</Base>

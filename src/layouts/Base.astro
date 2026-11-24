@@ -45,6 +45,8 @@ const ogImage = new URL(asset("/brand/og.png"), Astro.site).href;
 const internalNav: NavItem[] = [
 	{ href: "/install", label: "install" },
 	{ href: "/guides", label: "guides" },
+	{ href: "/queue", label: "queue" },
+	{ href: "/cli", label: "cli" },
 	{ href: "/benchmarks", label: "benchmarks" },
 	{ href: "/changelog", label: "changelog" },
 ];
@@ -155,8 +157,11 @@ const isCurrent = (href: string, external?: boolean) =>
 				<div class="footer-links">
 					<a href="/install">install</a>
 					<a href="/guides">guides</a>
+					<a href="/queue">queue</a>
+					<a href="/cli">cli</a>
 					<a href="/benchmarks">benchmarks</a>
 					<a href="/changelog">changelog</a>
+					<a href="/llms.txt">llms.txt</a>
 					<a href="https://github.com/nuggocto/bunpo/releases" target="_blank" rel="noreferrer">releases</a>
 					<a href="https://github.com/nuggocto/bunpo" target="_blank" rel="noreferrer">source</a>
 				</div>

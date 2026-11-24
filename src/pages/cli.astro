@@ -1,0 +1,22 @@
+---
+import { getEntry, render } from "astro:content";
+import Base from "../layouts/Base.astro";
+
+const entry = await getEntry("docs", "cli");
+if (!entry) throw new Error("Missing src/content/docs/cli.md");
+const { Content } = await render(entry);
+---
+
+<Base title="CLI reference — Bunpō" description={entry.data.summary}>
+	<span class="eyebrow">reference · bunpo &amp; bunpo-server</span>
+	<h1>Bunpō CLI reference</h1>
+	<p class="lead">
+		Every command, flag, exit code, environment variable, and <code>.bunpo/</code> file. Looking
+		for machine-readable docs? See <a href="/llms.txt">/llms.txt</a> and{" "}
+		<a href="/llms-full.txt">/llms-full.txt</a>.
+	</p>
+
+	<article class="prose" style="margin-top: 2rem;">
+		<Content />
+	</article>
+</Base>
