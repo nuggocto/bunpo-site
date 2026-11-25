@@ -1,0 +1,349 @@
+---
+import replayData from "../data/queue-replay.json";
+import { formatReplayTime, type ReplayRecording, stateAt } from "../lib/queue-replay";
+
+const recording = replayData as unknown as ReplayRecording;
+const finalFrame = stateAt(recording, recording.duration_ms);
+const durationMS = finalFrame.durationMS;
+const VIEW_W = 1000;
+const BAR_Y = 2;
+const BAR_H = 14;
+const patternPrefix = "qr";
+
+const killX =
+	recording.killed.at_ms !== null
+		? ((recording.killed.at_ms / durationMS) * VIEW_W).toFixed(1)
+		: "0";
+
+const tickStep = 15_000;
+const ticks: { ms: number; pct: number; label: string }[] = [];
+for (let ms = 0; ms < durationMS - 6_000; ms += tickStep) {
+	ticks.push({ ms, pct: (ms / durationMS) * 100, label: `${ms / 1000}s` });
+}
+ticks.push({ ms: durationMS, pct: 100, label: formatReplayTime(durationMS) });
+
+const laneNote = (lane: (typeof finalFrame.lanes)[number]) => {
+	if (lane.isKilled) return "killed mid-batch";
+	if (lane.isLate) return `starts +${Math.round(lane.firstMS / 1000)}s`;
+	if (lane.speed <= 0.8) return `fast (${lane.speed}×)`;
+	if (lane.speed >= 1.3) return `slow (${lane.speed}×)`;
+	return `${lane.speed}×`;
+};
+
+const symbolFor = (kind: string) => {
+	switch (kind) {
+		case "running":
+			return "▸";
+		case "retried":
+			return "↻";
+		case "killed":
+			return "✕";
+		case "offline":
+			return "⊘";
+		case "done":
+			return "✓";
+		default:
+			return "·";
+	}
+};
+---
+
+<div class="replay-panel" data-queue-replay data-pattern-prefix={patternPrefix}>
+	<div class="replay-stats">
+		<div class="replay-stat">
+			<span class="gain-label">Time</span>
+			<span class="replay-stat-val mono" data-replay-time>
+				{formatReplayTime(finalFrame.timeMS)} / {formatReplayTime(durationMS)}
+			</span>
+		</div>
+		<div class="replay-stat">
+			<span class="gain-label">Files done</span>
+			<span class="replay-stat-val mono" data-replay-done>
+				{finalFrame.counts.done} / {finalFrame.counts.total} ({finalFrame.counts.recoveredDone} retried)
+			</span>
+		</div>
+		<div class="replay-stat">
+			<span class="gain-label">Queue</span>
+			<span class="replay-stat-val mono" data-replay-queue>
+				{finalFrame.counts.running} running · {finalFrame.counts.waiting} waiting
+			</span>
+		</div>
+		<div class="replay-stat replay-stat-verdict">
+			<span class="gain-label">Verdict</span>
+			<span class="replay-stat-val mono" data-replay-verdict data-verdict={finalFrame.verdict}>
+				✓ {finalFrame.verdict}
+			</span>
+		</div>
+	</div>
+
+	<div class="replay-controls" role="group" aria-label="Replay controls" hidden>
+		<div class="replay-buttons">
+			<button type="button" class="btn replay-btn" data-replay-play aria-pressed="false">
+				Replay
+			</button>
+			<button type="button" class="btn btn-ghost replay-btn" data-replay-restart>
+				Restart
+			</button>
+			<div class="replay-speeds" role="group" aria-label="Playback speed">
+				<button type="button" class="replay-speed-btn" data-replay-speed="1" aria-pressed="false">
+					1×
+				</button>
+				<button type="button" class="replay-speed-btn" data-replay-speed="4" aria-pressed="true">
+					4×
+				</button>
+				<button type="button" class="replay-speed-btn" data-replay-speed="8" aria-pressed="false">
+					8×
+				</button>
+			</div>
+		</div>
+		<label class="replay-seek-wrap">
+			<span class="sr-only">Seek build replay time</span>
+			<input
+				type="range"
+				class="replay-seek"
+				data-replay-seek
+				min="0"
+				max={String(durationMS)}
+				step="100"
+				value={String(durationMS)}
+				aria-label="Replay time"
+				aria-valuetext={`${formatReplayTime(durationMS)}, Passed, ${finalFrame.counts.done} of ${finalFrame.counts.total} files done`}
+			/>
+		</label>
+	</div>
+
+	<div class="replay-milestones" role="group" aria-label="Jump to key moments" hidden>
+		{
+			finalFrame.milestones.map((m, idx) => (
+				<button
+					type="button"
+					class="replay-milestone-btn"
+					data-replay-milestone={String(idx)}
+					data-replay-at={String(m.atMS)}
+					aria-current={idx === finalFrame.activeMilestoneIndex ? "step" : "false"}
+				>
+					<span>{m.label}</span>
+					<span class="replay-ms-time">{formatReplayTime(m.atMS)}</span>
+				</button>
+			))
+		}
+	</div>
+
+	<div class="replay-caption">
+		<span class="replay-source-tag mono" data-replay-source>{finalFrame.activeMilestone.source === "harness" ? "harness record" : "server API"}</span>
+		<span data-replay-caption>{finalFrame.activeMilestone.caption}</span>
+		<span class="sr-only" aria-live="polite" aria-atomic="true" data-replay-live></span>
+	</div>
+
+	<svg class="replay-defs" width="0" height="0" aria-hidden="true" focusable="false">
+		<defs>
+			<pattern
+				id={`${patternPrefix}-expired`}
+				width="6"
+				height="6"
+				patternUnits="userSpaceOnUse"
+				patternTransform="rotate(45)"
+			>
+				<rect width="6" height="6" fill="#FAF8F5" />
+				<line x1="0" y1="0" x2="0" y2="6" stroke="#B42D3F" stroke-width="2" />
+			</pattern>
+			<pattern
+				id={`${patternPrefix}-retry`}
+				width="6"
+				height="6"
+				patternUnits="userSpaceOnUse"
+				patternTransform="rotate(-45)"
+			>
+				<rect width="6" height="6" fill="#E4F3EC" />
+				<line x1="0" y1="0" x2="0" y2="6" stroke="#C47F17" stroke-width="1.8" />
+			</pattern>
+		</defs>
+	</svg>
+
+	<div class="replay-lanes" role="list" aria-label="Per-machine lease timeline">
+		{
+			finalFrame.lanes.map((lane) => (
+				<div class="replay-lane" role="listitem" data-replay-lane={String(lane.machine)}>
+					<div class="replay-lane-head">
+						<span class="replay-lane-name">
+							<strong>M{lane.machine}</strong>{" "}
+							<span class="muted">{laneNote(lane)}</span>
+						</span>
+						<span class="replay-lane-right">
+							<span class="replay-lane-status" data-lane-status data-kind={lane.statusKind}>
+								{symbolFor(lane.statusKind)} {lane.statusText}
+							</span>
+							<span class="muted" data-lane-count>
+								{lane.acceptedAtT} {lane.acceptedAtT === 1 ? "file" : "files"}
+							</span>
+						</span>
+					</div>
+					<svg
+						class="replay-svg"
+						viewBox={`0 0 ${VIEW_W} 18`}
+						preserveAspectRatio="none"
+						aria-hidden="true"
+					>
+						<rect x="0" y="1" width={VIEW_W} height="16" fill="#FAF8F5" stroke="#DCD5C9" stroke-width="1" />
+						<g data-lane-bars>
+							{lane.bars.map((bar) => {
+								const x = (bar.startMS / durationMS) * VIEW_W;
+								const w = Math.max(3.5, Math.min(((bar.drawEndMS - bar.startMS) / durationMS) * VIEW_W, VIEW_W - x));
+								if (bar.kind === "expired") {
+									return (
+										<rect
+											x={x.toFixed(1)}
+											y={String(BAR_Y)}
+											width={w.toFixed(1)}
+											height={String(BAR_H)}
+											fill={`url(#${patternPrefix}-expired)`}
+											stroke="#B42D3F"
+											stroke-width="1.2"
+										/>
+									);
+								}
+								if (bar.kind === "retried") {
+									return (
+										<rect
+											x={x.toFixed(1)}
+											y={String(BAR_Y)}
+											width={w.toFixed(1)}
+											height={String(BAR_H)}
+											fill={`url(#${patternPrefix}-retry)`}
+											stroke="#1F7A5A"
+											stroke-width="1.2"
+										/>
+									);
+								}
+								return (
+									<rect
+										x={x.toFixed(1)}
+										y={String(BAR_Y)}
+										width={w.toFixed(1)}
+										height={String(BAR_H)}
+										fill="#3B9B76"
+										stroke="#1F7A5A"
+										stroke-width="1"
+									/>
+								);
+							})}
+						</g>
+						{lane.isKilled && recording.killed.at_ms !== null && (
+							<line
+								data-lane-kill
+								x1={killX}
+								y1="0"
+								x2={killX}
+								y2="18"
+								stroke="#B42D3F"
+								stroke-width="2"
+								stroke-dasharray="3 2"
+							/>
+						)}
+						<line
+							data-lane-playhead
+							x1={String(VIEW_W)}
+							y1="0"
+							x2={String(VIEW_W)}
+							y2="18"
+							stroke="#8C5A2B"
+							stroke-width="2"
+						/>
+					</svg>
+				</div>
+			))
+		}
+	</div>
+
+	<div class="replay-axis mono small muted" aria-hidden="true">
+		{
+			ticks.map((tk, idx) => {
+				const isFirst = idx === 0;
+				const isLast = idx === ticks.length - 1;
+				const cls = [
+					"replay-tick",
+					isFirst ? "replay-tick-start" : isLast ? "replay-tick-end" : "replay-tick-mid",
+					!isLast && tk.pct > 75 ? "replay-tick-edge" : "",
+				]
+					.filter(Boolean)
+					.join(" ");
+				return (
+					<span class={cls} style={isFirst || isLast ? undefined : `left: ${tk.pct.toFixed(2)}%`}>
+						{tk.label}
+					</span>
+				);
+			})
+		}
+	</div>
+
+	<div class="replay-legend small muted mono" aria-label="Timeline legend">
+		<span class="replay-legend-item">
+			<svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true">
+				<rect x="0.5" y="1" width="13" height="10" fill="#3B9B76" stroke="#1F7A5A" stroke-width="1" />
+			</svg>
+			✓ passed batch
+		</span>
+		<span class="replay-legend-item">
+			<svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true">
+				<rect x="0.5" y="1" width="13" height="10" fill={`url(#${patternPrefix}-retry)`} stroke="#1F7A5A" stroke-width="1.2" />
+			</svg>
+			↻ solo retry (gen 2)
+		</span>
+		<span class="replay-legend-item">
+			<svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true">
+				<rect x="0.5" y="1" width="13" height="10" fill="#F6ECD9" stroke="#C47F17" stroke-width="1.2" />
+			</svg>
+			▸ running
+		</span>
+		<span class="replay-legend-item">
+			<svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true">
+				<rect x="0.5" y="1" width="13" height="10" fill="#FAF8F5" stroke="#B42D3F" stroke-width="1.2" stroke-dasharray="3 2" />
+			</svg>
+			✕ killed (before expiry)
+		</span>
+		<span class="replay-legend-item">
+			<svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true">
+				<rect x="0.5" y="1" width="13" height="10" fill={`url(#${patternPrefix}-expired)`} stroke="#B42D3F" stroke-width="1.2" />
+			</svg>
+			⊘ expired lease
+		</span>
+	</div>
+
+	<noscript>
+		<div class="replay-noscript">
+			<p class="small">
+				<strong>Final result (JavaScript disabled):</strong> the timeline above shows the completed{" "}
+				{formatReplayTime(durationMS)} build ({finalFrame.counts.total} files, verdict{" "}
+				<code>{finalFrame.verdict}</code>). Key events from the recording:
+			</p>
+			<ol class="replay-noscript-list small">
+				{
+					finalFrame.milestones.map((m) => (
+						<li>
+							<span class="mono">{formatReplayTime(m.atMS)}</span> — {m.caption}
+						</li>
+					))
+				}
+			</ol>
+		</div>
+	</noscript>
+
+	<div class="chart-footnote">
+		<p>
+			<strong>Real build, synthetic test sleeps.</strong> Recorded locally from real{" "}
+			<code>bunpo-server</code> and <code>bunpo --queue</code> binaries (commit{" "}
+			<code>{recording.bunpo_commit}</code>,{" "}
+			<code>--lease-ttl {Math.round(recording.config.lease_ttl_ms / 1000)}s</code>,{" "}
+			<code>--max-batch {recording.config.max_batch}</code>), with sleeps in place of tests and
+			machine speeds, the late start (M{recording.late_machine}), and the <code>SIGKILL</code>{" "}
+			(M{recording.killed.machine}) set on purpose. Every lease, expiry, and retry timestamp comes
+			from the server API; only the <code>SIGKILL</code> moment comes from the recording harness.
+		</p>
+	</div>
+
+	<script type="application/json" data-replay-json set:html={JSON.stringify(recording)} />
+</div>
+
+<script>
+	import "../scripts/queue-replay";
+</script>
