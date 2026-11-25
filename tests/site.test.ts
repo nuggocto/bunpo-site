@@ -187,7 +187,8 @@ describe("built static output (when dist/ exists)", () => {
 		expect(llms).toContain("https://bunpo.org/cli/");
 		expect(llms).toContain("https://bunpo.org/queue/");
 		expect(llms).toContain("https://bunpo.org/llms-full.txt");
-		expect(llms).toContain("upcoming in 0.1.0");
+		expect(llms).toContain(LATEST_VERSION);
+		expect(llms.toLowerCase()).not.toContain("upcoming");
 
 		const llmsFull = readFileSync("dist/llms-full.txt", "utf8");
 		expect(llmsFull).toContain("bunpo split");

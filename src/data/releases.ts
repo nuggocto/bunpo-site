@@ -6,9 +6,24 @@ export interface Release {
 	notes: string[];
 }
 
-export const LATEST_VERSION = "v0.0.7";
+export const LATEST_VERSION = "v0.1.0";
 
 export const releases: Release[] = [
+	{
+		version: "v0.1.0",
+		date: "2026-11-26",
+		summary:
+			"Self-hosted live queue (--queue and --status), Cloudflare Worker, standalone bunpo-server, and shared read-only web dashboard.",
+		url: "https://github.com/nuggocto/bunpo/releases/tag/v0.1.0",
+		notes: [
+			"Added live-queue mode (bunpo --queue and --status) to pull test batches as machines finish, reassign work from killed or slow runners, and write report-0.json for bunpo merge.",
+			"Added Cloudflare Worker queue server (worker/) backed by SQLite Durable Objects with 7-day automatic cleanup.",
+			"Added standalone Go queue server (bunpo-server) with optional --data persistence, cross-compiled release binaries (6.4 to 7.1 MiB), and a scratch Dockerfile.",
+			"Added a shared read-only web dashboard served by both bunpo-server and the Cloudflare Worker, showing recent builds, a per-machine lease timeline, slowest files, and retried or failed tests.",
+			"Added CLI reference (docs/cli.md), self-hosting guide, HTTP protocol spec, live-queue workflows in all five runner guides, and Cloudflare Free-plan trial record.",
+			"Static mode (split, plan, record, merge, verify, version), .bunpo/ file formats, and exit codes are unchanged. The bunpo CLI grew from 3.2 MiB to 7.0 MiB on linux/amd64 (6.4 to 7.2 MiB across targets) due to Go's standard library HTTP/TLS client.",
+		],
+	},
 	{
 		version: "v0.0.7",
 		date: "2026-11-23",

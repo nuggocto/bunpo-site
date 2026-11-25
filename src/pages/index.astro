@@ -54,8 +54,8 @@ const alternatives = [
 	},
 	{
 		name: "Bunpō",
-		split: "Recorded time of each file, from your CI cache. Checks the assignment.",
-		pick: "You want one free tool for several runners, with no server.",
+		split: "Recorded time of each file, from your CI cache (static) or a self-hosted queue.",
+		pick: "You want one free tool for several runners: static with no server, or self-hosted --queue for uneven runners.",
 		self: true,
 	},
 ];
@@ -68,7 +68,8 @@ const alternatives = [
 			<h1>Split your tests so CI machines finish together.</h1>
 			<p class="lead">
 				Bunpō balances test files by recorded time, and fails the build if a file is assigned
-				twice or not at all. It is one static binary with no server.
+				twice or not at all. Static mode is one binary with no server; an optional self-hosted live
+				queue handles uneven, late, or killable runners.
 			</p>
 			<InstallLine />
 			<div class="actions">
@@ -111,8 +112,8 @@ const alternatives = [
 
 	<ul class="facts" aria-label="Key facts">
 		<li>5 tested guides</li>
-		<li>3.2 MiB binary</li>
-		<li>no server, timings in your CI cache</li>
+		<li>7.0 MiB binary</li>
+		<li>static mode needs no server</li>
 	</ul>
 
 	<section class="band" id="how-it-works">
@@ -206,6 +207,33 @@ const alternatives = [
 		</div>
 	</section>
 
+	<section class="band" id="live-queue">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Live queue</strong>
+				<span>Second mode · self-hosted</span>
+			</div>
+			<div>
+				<h2>When machines drift apart, pull batches from a queue.</h2>
+				<p>
+					Static splitting fits identical machines that start together and needs no server. When
+					runners have different speeds, start minutes apart, or get killed mid-run,{" "}
+					<code>bunpo --queue</code> pulls the next batch as each machine finishes and reassigns
+					expired leases.
+				</p>
+				<p>
+					Run the queue on your own{" "}
+					<a href="/queue#cloudflare">Cloudflare Worker</a> (SQLite Durable Objects) or the
+					standalone <a href="/install#queue-server"><code>bunpo-server</code></a> binary. Both
+					speak the same HTTP protocol and serve the same read-only build dashboard.
+				</p>
+				<p class="small">
+					<a href="/queue#replay">Watch a recorded 8-machine build →</a>
+				</p>
+			</div>
+		</div>
+	</section>
+
 	<section class="band" id="demo">
 		<div class="band-head">
 			<div class="band-label">
@@ -258,14 +286,6 @@ const alternatives = [
 					Bunpō splits whole files, so one file slower than the average machine load sets the
 					floor. It warns you when that happens.
 				</p>
-				<div class="queue-callout">
-					<p class="small">
-						<strong>Upcoming in 0.1.0: self-hosted live queue.</strong> When runners have different
-						speeds, start late, or get killed mid-run, <code>bunpo --queue</code> pulls the next
-						batch from your own Cloudflare Worker or <code>bunpo-server</code>.{" "}
-						<a href="/queue#replay">Watch a recorded 8-machine build →</a>
-					</p>
-				</div>
 			</div>
 		</div>
 	</section>

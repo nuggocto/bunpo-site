@@ -20,17 +20,16 @@ const runnerExample = `find tests \\( -name 'test_*.py' -o -name '*_test.py' \\)
 ---
 
 <Base
-	title="Live queue (upcoming in 0.1.0) — Bunpō"
-	description="Watch a recorded 8-machine live-queue build recover from a killed runner, and see how Bunpō runs on Cloudflare Durable Objects or bunpo-server. Upcoming in 0.1.0."
+	title="Live queue — Bunpō"
+	description="Watch a recorded 8-machine live-queue build recover from a killed runner, and see how Bunpō runs on Cloudflare Durable Objects or bunpo-server."
 >
-	<span class="eyebrow">live queue · upcoming in 0.1.0</span>
+	<span class="eyebrow">live queue · self-hosted</span>
 	<h1>Self-hosted live queue</h1>
 	<p class="lead">
-		Coming in <code>0.1.0</code> (not yet released; the current release is <code>v0.0.7</code>).{" "}
 		<code>bunpo --queue</code> pulls batches of test files as each machine finishes, and reassigns
-		leases when a runner is killed or loses a report.{" "}
-		<a href="#replay">Watch the replay</a> or jump to{" "}
-		<a href="#cloudflare">how it runs on Cloudflare</a>.
+		leases when a runner is killed or loses a report. <a href="#replay">Watch the replay</a>, see{" "}
+		<a href="#cloudflare">how it runs on Cloudflare</a>, or{" "}
+		<a href="/install#queue-server">install bunpo-server</a>.
 	</p>
 
 	<section class="band" id="replay" style="margin-top: 2rem;">

@@ -33,6 +33,14 @@ Move-Item "bunpo-windows-$arch.exe" "$env:USERPROFILE\\bin\\bunpo.exe" -Force`;
 
 const sourceInstall = `go install github.com/nuggocto/bunpo/cmd/bunpo@${LATEST_VERSION}`;
 
+const serverLinuxInstall = `ARCH=amd64 # or arm64
+curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-server-linux-$ARCH && \\
+curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS && \\
+sha256sum --ignore-missing -c SHA256SUMS && \\
+chmod +x bunpo-server-linux-$ARCH && mv bunpo-server-linux-$ARCH /usr/local/bin/bunpo-server`;
+
+const serverSourceInstall = `go install github.com/nuggocto/bunpo/cmd/bunpo-server@${LATEST_VERSION}`;
+
 const verifyInstall = `bunpo --version`;
 
 const platforms = [
@@ -68,7 +76,8 @@ const platforms = [
 	<h1>Install Bunpō</h1>
 	<p class="lead">
 		Add one line in GitHub Actions, drop a verified static binary onto any CI runner, or build
-		from source with Go. No server, no runtime dependencies, and no account required.
+		from source with Go. Static mode needs no server; neither mode has runtime dependencies or an
+		account.
 	</p>
 
 	<section class="band" id="github-actions" style="margin-top: 2rem;">
@@ -104,8 +113,9 @@ const platforms = [
 			<div>
 				<h2>Download and verify against SHA256SUMS</h2>
 				<p>
-					Prebuilt static binaries (~3.2 MiB, Go standard library only) are published on
-					every release for Linux, macOS, and Windows on both x86-64 and ARM64.
+					Prebuilt static binaries (7.0 MiB on <code>linux/amd64</code>, 6.4 to 7.2 MiB across
+					targets, Go standard library only) are published on every release for Linux, macOS, and
+					Windows on both x86-64 and ARM64.
 				</p>
 
 				<div class="install-tabs-box" data-tabs>
@@ -171,6 +181,39 @@ const platforms = [
 					automatically on first build.
 				</p>
 				<CopyBlock label="Go install" code={sourceInstall} />
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="queue-server">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Queue server</strong>
+				<span>Optional · live queue</span>
+			</div>
+			<div>
+				<h2>Install bunpo-server or deploy the Cloudflare Worker</h2>
+				<p>
+					Skip this if you use static mode (<code>bunpo split</code> and <code>verify</code>). For{" "}
+					<code>bunpo --queue</code>, download <code>bunpo-server</code> from GitHub Releases (6.4
+					to 7.1 MiB across Linux, macOS, and Windows on x86-64 and ARM64), build it with Go, use
+					the repository <code>Dockerfile</code>, or deploy <code>worker/</code> to Cloudflare.
+				</p>
+				<CopyBlock label={`bunpo-server Linux (${LATEST_VERSION})`} code={serverLinuxInstall} />
+				<CopyBlock label="bunpo-server via Go install" code={serverSourceInstall} />
+				<p class="small muted">
+					<code>action.yml</code> installs only <code>bunpo</code>, never{" "}
+					<code>bunpo-server</code>. For Cloudflare Worker deployment, TLS setup, and token
+					rotation, see <a href="/queue#servers">/queue</a> and{" "}
+					<a
+						href="https://github.com/nuggocto/bunpo/blob/shrek/docs/self-hosting.md"
+						target="_blank"
+						rel="noreferrer"
+					>
+						docs/self-hosting.md
+					</a>
+					.
+				</p>
 			</div>
 		</div>
 	</section>
