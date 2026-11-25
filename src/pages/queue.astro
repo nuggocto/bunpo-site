@@ -175,14 +175,14 @@ const runnerExample = `find tests \\( -name 'test_*.py' -o -name '*_test.py' \\)
 							</tr>
 							<tr>
 								<td>Heartbeats (8 machines, 400 files)</td>
-								<td>Leases held up to 30.1 s on a 15 s TTL; 114 heartbeats, &le; 1 ms CPU</td>
+								<td>Leases held up to 30.1 s on a 15 s TTL; 114 heartbeats recorded, &le; 1 ms CPU</td>
 							</tr>
 							<tr>
 								<td>Heartbeats across DO hibernation</td>
 								<td>1 machine held a 150 s lease with 20 s heartbeats across 10 s idle sleep</td>
 							</tr>
 							<tr>
-								<td><code>BuildDO</code> <code>init</code> CPU (Run 2)</td>
+								<td><code>BuildDO</code> <code>init</code> CPU under load</td>
 								<td>14 to 46 ms at 5,000 files (median 24 ms); 31 to 73 ms at 20,000 (median 49 ms)</td>
 							</tr>
 							<tr>
