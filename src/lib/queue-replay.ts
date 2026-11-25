@@ -97,12 +97,6 @@ export interface ReplayMilestone {
 export const SEEK_STEP_MS = 1;
 export const KEYBOARD_SEEK_STEP_MS = 1000;
 
-export function maxReachableSliderValue(maxMS: number, stepMS: number): number {
-	const safeMax = Math.max(0, Math.floor(maxMS));
-	const safeStep = Math.max(1, Math.floor(stepMS));
-	return Math.floor(safeMax / safeStep) * safeStep;
-}
-
 export function formatMachineSpeed(timeMultiplier: number): string {
 	const speed = timeMultiplier > 0 ? 1 / timeMultiplier : 1;
 	return `${speed.toFixed(1)}× speed`;

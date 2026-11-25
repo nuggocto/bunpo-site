@@ -5,7 +5,6 @@ import {
 	buildMilestones,
 	collectEventTimes,
 	formatMachineSpeed,
-	maxReachableSliderValue,
 	type ReplayRecording,
 	SEEK_STEP_MS,
 	stateAt,
@@ -59,16 +58,13 @@ describe("queue replay recording & pure stateAt(t)", () => {
 	});
 
 	test("last reachable slider value reaches the final passed verdict", () => {
-		const lastReachable = maxReachableSliderValue(recording.duration_ms, SEEK_STEP_MS);
-		expect(lastReachable).toBe(recording.duration_ms);
-		const endFrame = stateAt(recording, lastReachable);
+		expect(recording.duration_ms % SEEK_STEP_MS).toBe(0);
+		const endFrame = stateAt(recording, recording.duration_ms);
 		expect(endFrame.verdict).toBe("passed");
 		expect(endFrame.counts.done).toBe(recording.counts.total);
 		expect(endFrame.counts.leased).toBe(0);
 		expect(endFrame.counts.waiting).toBe(0);
 
-		// Also verify non-divisible durations reach their exact end with SEEK_STEP_MS.
-		expect(maxReachableSliderValue(71_653, SEEK_STEP_MS)).toBe(71_653);
 		expect(formatMachineSpeed(0.72)).toBe("1.4× speed");
 		expect(formatMachineSpeed(1.58)).toBe("0.6× speed");
 	});
