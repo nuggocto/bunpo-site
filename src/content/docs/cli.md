@@ -4,7 +4,7 @@ title: "CLI reference"
 summary: "Every command, flag, exit code, environment variable, and .bunpo/ file for bunpo and bunpo-server."
 ---
 
-Reference for `bunpo` and `bunpo-server` (`--queue` and `bunpo-server` arrive in the upcoming `0.1.0` release). `bunpo split` writes test file paths to standard output; every command writes status and error messages to standard error. For the live-queue overview see [/queue](/queue); for the HTTP contract and self-hosting steps see [docs/queue-protocol.md](https://github.com/nuggocto/bunpo/blob/shrek/docs/queue-protocol.md) and [docs/self-hosting.md](https://github.com/nuggocto/bunpo/blob/shrek/docs/self-hosting.md).
+Reference for `bunpo` and `bunpo-server`. `bunpo split` writes test file paths to standard output; every command writes status and error messages to standard error. For the live-queue overview see [/queue](/queue); for the HTTP contract and self-hosting steps see [docs/queue-protocol.md](https://github.com/nuggocto/bunpo/blob/shrek/docs/queue-protocol.md) and [docs/self-hosting.md](https://github.com/nuggocto/bunpo/blob/shrek/docs/self-hosting.md).
 
 ## Exit codes
 
@@ -83,7 +83,7 @@ find tests -name 'test_*.py' | bunpo verify --dir .bunpo
 | ------- | -------- | --------------------------------------------------------- |
 | `--dir` | `.bunpo` | Directory holding every machine's `manifest-<index>.json` |
 
-### `bunpo --queue` _(upcoming in `0.1.0`)_
+### `bunpo --queue`
 
 Runs in live-queue worker mode (pulling dynamically sized test batches from a queue server until the build finishes) or queries a build's status with `--status`. Plain `http://` is refused outside loopback unless `--allow-insecure-http` is set.
 
@@ -120,7 +120,7 @@ bunpo --queue "$BUNPO_QUEUE_URL" --build "$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --
 - `bunpo help` (aliases: `-h`, `-help`, `--help`): prints usage summary and exits `0`.
 - `bunpo <command> -h` or `bunpo --queue -h`: prints command flags and exits `0`.
 
-### `bunpo-server` _(upcoming in `0.1.0`)_
+### `bunpo-server`
 
 Standalone HTTP server for the live queue and embedded web dashboard. Terminate TLS at a reverse proxy. Tokens are read only from environment variables, never flags. Run at most one process per `--data` directory.
 
