@@ -1,5 +1,6 @@
 import {
 	formatReplayTime,
+	KEYBOARD_SEEK_STEP_MS,
 	type MachineBar,
 	type ReplayFrame,
 	type ReplayRecording,
@@ -150,7 +151,9 @@ function initReplay(root: HTMLElement): void {
 
 	let currentMS = reducedMotion ? durationMS : 0;
 	let speed = 4;
-	let playing = !reducedMotion;
+	let playing = false;
+	let hasAutoStarted = reducedMotion;
+	let userInteracted = false;
 	let rafID: number | null = null;
 	let lastPerfMS = 0;
 	let lastAnnouncedMilestone = -1;
@@ -181,7 +184,7 @@ function initReplay(root: HTMLElement): void {
 		if (queueOut) {
 			const reqNote =
 				frame.counts.requeuedWaiting > 0 ? ` (${frame.counts.requeuedWaiting} expired)` : "";
-			queueOut.textContent = `${frame.counts.running} running · ${frame.counts.waiting} waiting${reqNote}`;
+			queueOut.textContent = `${frame.counts.leased} leased · ${frame.counts.waiting} waiting${reqNote}`;
 		}
 		if (verdictOut) {
 			verdictOut.textContent = frame.verdict === "passed" ? "✓ passed" : frame.verdict;
@@ -224,7 +227,7 @@ function initReplay(root: HTMLElement): void {
 				dom.statusEl.dataset.kind = lane.statusKind;
 			}
 			if (dom.countEl) {
-				dom.countEl.textContent = `${lane.acceptedAtT} ${lane.acceptedAtT === 1 ? "file" : "files"}`;
+				dom.countEl.textContent = `${lane.acceptedAtT} done`;
 			}
 			if (dom.barsGroup) {
 				const frag = document.createDocumentFragment();
@@ -285,6 +288,7 @@ function initReplay(root: HTMLElement): void {
 	};
 
 	playBtn?.addEventListener("click", () => {
+		userInteracted = true;
 		if (playing) {
 			pauseLoop();
 		} else {
@@ -297,6 +301,7 @@ function initReplay(root: HTMLElement): void {
 	});
 
 	restartBtn?.addEventListener("click", () => {
+		userInteracted = true;
 		currentMS = 0;
 		lastAnnouncedMilestone = -1;
 		renderFrame(stateAt(recording, 0), true);
@@ -314,18 +319,54 @@ function initReplay(root: HTMLElement): void {
 		});
 	}
 
+	const seekTo = (nextMS: number) => {
+		userInteracted = true;
+		pauseLoop();
+		currentMS = Math.max(0, Math.min(durationMS, Math.round(nextMS)));
+		renderFrame(stateAt(recording, currentMS), true);
+	};
+
 	seekInput?.addEventListener("input", () => {
 		const nextMS = Number(seekInput.value);
 		if (!Number.isFinite(nextMS)) return;
-		pauseLoop();
-		currentMS = Math.max(0, Math.min(durationMS, nextMS));
-		renderFrame(stateAt(recording, currentMS), true);
+		seekTo(nextMS);
+	});
+
+	// Keep step="1" so dragging reaches the exact end, while arrow keys move in 1 s jumps.
+	seekInput?.addEventListener("keydown", (event) => {
+		let nextMS: number | null = null;
+		switch (event.key) {
+			case "ArrowLeft":
+			case "ArrowDown":
+				nextMS = currentMS - KEYBOARD_SEEK_STEP_MS;
+				break;
+			case "ArrowRight":
+			case "ArrowUp":
+				nextMS = currentMS + KEYBOARD_SEEK_STEP_MS;
+				break;
+			case "PageDown":
+				nextMS = currentMS - KEYBOARD_SEEK_STEP_MS * 5;
+				break;
+			case "PageUp":
+				nextMS = currentMS + KEYBOARD_SEEK_STEP_MS * 5;
+				break;
+			case "Home":
+				nextMS = 0;
+				break;
+			case "End":
+				nextMS = durationMS;
+				break;
+		}
+		if (nextMS === null) return;
+		event.preventDefault();
+		seekTo(nextMS);
 	});
 
 	for (const btn of milestoneBtns) {
 		btn.addEventListener("click", () => {
 			const targetMS = Number(btn.dataset.replayAt);
 			if (!Number.isFinite(targetMS)) return;
+			userInteracted = true;
 			pauseLoop();
 			currentMS = Math.max(0, Math.min(durationMS, targetMS));
 			lastAnnouncedMilestone = -1;
@@ -333,12 +374,44 @@ function initReplay(root: HTMLElement): void {
 		});
 	}
 
+	document.addEventListener("visibilitychange", () => {
+		if (document.hidden && playing) {
+			pauseLoop();
+		}
+	});
+
 	setSpeed(speed);
 	updatePlayButton();
 	renderFrame(stateAt(recording, currentMS), false);
 
-	if (playing) {
-		startLoop();
+	if (!reducedMotion) {
+		const triggerAutoplay = () => {
+			if (hasAutoStarted || userInteracted || document.hidden) return;
+			hasAutoStarted = true;
+			startLoop();
+		};
+
+		const lanesEl = root.querySelector<HTMLElement>(".replay-lanes") ?? root;
+		if (typeof IntersectionObserver === "function") {
+			const lanesH = lanesEl.getBoundingClientRect().height;
+			const viewH = window.innerHeight || 900;
+			const threshold = lanesH > 0 ? Math.max(0.2, Math.min(0.85, (viewH * 0.7) / lanesH)) : 0.75;
+			const observer = new IntersectionObserver(
+				(entries) => {
+					for (const entry of entries) {
+						if (entry.isIntersecting && entry.intersectionRatio >= threshold) {
+							observer.disconnect();
+							triggerAutoplay();
+							break;
+						}
+					}
+				},
+				{ threshold },
+			);
+			observer.observe(lanesEl);
+		} else {
+			triggerAutoplay();
+		}
 	}
 }
 

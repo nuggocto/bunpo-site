@@ -94,6 +94,20 @@ export interface ReplayMilestone {
 	source: "server" | "harness";
 }
 
+export const SEEK_STEP_MS = 1;
+export const KEYBOARD_SEEK_STEP_MS = 1000;
+
+export function maxReachableSliderValue(maxMS: number, stepMS: number): number {
+	const safeMax = Math.max(0, Math.floor(maxMS));
+	const safeStep = Math.max(1, Math.floor(stepMS));
+	return Math.floor(safeMax / safeStep) * safeStep;
+}
+
+export function formatMachineSpeed(timeMultiplier: number): string {
+	const speed = timeMultiplier > 0 ? 1 / timeMultiplier : 1;
+	return `${speed.toFixed(1)}× speed`;
+}
+
 export interface ReplayFrame {
 	timeMS: number;
 	durationMS: number;
@@ -101,7 +115,7 @@ export interface ReplayFrame {
 	counts: {
 		total: number;
 		waiting: number;
-		running: number;
+		leased: number;
 		done: number;
 		passed: number;
 		failed: number;
@@ -196,7 +210,7 @@ export function buildMilestones(
 			id: "late",
 			atMS: lateRunner.first_ms,
 			label: "Late join",
-			caption: `Machine ${lateRunner.machine} joins at ${formatReplayTime(lateRunner.first_ms)} and immediately pulls its first batch.`,
+			caption: `Machine ${lateRunner.machine} joins at ${formatReplayTime(lateRunner.first_ms)} and pulls its first batch.`,
 			source: "server",
 		});
 	}
@@ -206,8 +220,8 @@ export function buildMilestones(
 		out.push({
 			id: "kill",
 			atMS: recording.killed.at_ms,
-			label: "SIGKILL",
-			caption: `Machine ${recording.killed.machine} is killed with SIGKILL at ${formatReplayTime(recording.killed.at_ms)} (recorded by the harness). Its ${countText} lease stays held on the server until the ${ttlSec}s TTL.`,
+			label: "Killed",
+			caption: `Machine ${recording.killed.machine} is killed (SIGKILL) at ${formatReplayTime(recording.killed.at_ms)}, recorded by the harness. Its ${countText} lease stays held until the ${ttlSec}s TTL.`,
 			source: "harness",
 		});
 	}
@@ -236,7 +250,7 @@ export function buildMilestones(
 		id: "passed",
 		atMS: recording.duration_ms,
 		label: "Passed",
-		caption: `Build passed in ${formatReplayTime(recording.duration_ms)}: all ${recording.counts.total} files accepted once (${recoveredCount} reassigned after machine ${recording.killed.machine} died).`,
+		caption: `Build passed in ${formatReplayTime(recording.duration_ms)}: all ${recording.counts.total} files accepted once (${recoveredCount} retried after machine ${recording.killed.machine} died).`,
 		source: "server",
 	});
 
@@ -279,7 +293,7 @@ export function stateAt(recording: ReplayRecording, rawTimeMS: number): ReplayFr
 
 	const acceptedByMachine = new Map<number, number>();
 	let waiting = 0;
-	let running = 0;
+	let leased = 0;
 	let passed = 0;
 	let failed = 0;
 	let skipped = 0;
@@ -289,7 +303,7 @@ export function stateAt(recording: ReplayRecording, rawTimeMS: number): ReplayFr
 
 	for (let i = 0; i < recording.tests.length; i++) {
 		const attempts = recording.tests[i].a;
-		let isRunning = false;
+		let isLeased = false;
 		let terminal: AttemptStatus | null = null;
 		let terminalGen = 0;
 		let hadExpired = false;
@@ -297,7 +311,7 @@ export function stateAt(recording: ReplayRecording, rawTimeMS: number): ReplayFr
 		for (let j = 0; j < attempts.length; j++) {
 			const [, machine, gen, status, startMS, endMS] = attempts[j];
 			if (startMS <= t && t < endMS) {
-				isRunning = true;
+				isLeased = true;
 			} else if (endMS <= t) {
 				if (status === "expired") {
 					expiredAttempts++;
@@ -310,8 +324,8 @@ export function stateAt(recording: ReplayRecording, rawTimeMS: number): ReplayFr
 			}
 		}
 
-		if (isRunning) {
-			running++;
+		if (isLeased) {
+			leased++;
 		} else if (terminal !== null) {
 			if (terminal === "passed") passed++;
 			else if (terminal === "failed") failed++;
@@ -396,7 +410,7 @@ export function stateAt(recording: ReplayRecording, rawTimeMS: number): ReplayFr
 					statusText = `retry · ${shortFileName(activeLease.files[0] ?? "")}`;
 				} else {
 					statusKind = "running";
-					statusText = `${activeLease.files.length} ${activeLease.files.length === 1 ? "file" : "files"}`;
+					statusText = `${activeLease.files.length} in batch`;
 				}
 			} else if (t < r.first_ms) {
 				statusKind = "idle";
@@ -444,7 +458,7 @@ export function stateAt(recording: ReplayRecording, rawTimeMS: number): ReplayFr
 		counts: {
 			total: recording.counts.total,
 			waiting,
-			running,
+			leased,
 			done,
 			passed,
 			failed,

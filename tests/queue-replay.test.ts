@@ -4,7 +4,10 @@ import {
 	buildLeases,
 	buildMilestones,
 	collectEventTimes,
+	formatMachineSpeed,
+	maxReachableSliderValue,
 	type ReplayRecording,
+	SEEK_STEP_MS,
 	stateAt,
 } from "../src/lib/queue-replay";
 
@@ -34,7 +37,7 @@ describe("queue replay recording & pure stateAt(t)", () => {
 		expect(end.counts.done).toBe(recording.counts.total);
 		expect(end.counts.passed).toBe(recording.counts.total);
 		expect(end.counts.waiting).toBe(0);
-		expect(end.counts.running).toBe(0);
+		expect(end.counts.leased).toBe(0);
 
 		const laneAcceptedSum = end.lanes.reduce((sum, l) => sum + l.acceptedAtT, 0);
 		expect(laneAcceptedSum).toBe(recording.counts.total);
@@ -46,13 +49,28 @@ describe("queue replay recording & pure stateAt(t)", () => {
 
 		for (const t of times) {
 			const f = stateAt(recording, t);
-			expect(f.counts.waiting + f.counts.running + f.counts.done, `sum mismatch at t=${t}`).toBe(
+			expect(f.counts.waiting + f.counts.leased + f.counts.done, `sum mismatch at t=${t}`).toBe(
 				f.counts.total,
 			);
 			expect(f.counts.done, `done sum at t=${t}`).toBe(
 				f.counts.passed + f.counts.failed + f.counts.skipped,
 			);
 		}
+	});
+
+	test("last reachable slider value reaches the final passed verdict", () => {
+		const lastReachable = maxReachableSliderValue(recording.duration_ms, SEEK_STEP_MS);
+		expect(lastReachable).toBe(recording.duration_ms);
+		const endFrame = stateAt(recording, lastReachable);
+		expect(endFrame.verdict).toBe("passed");
+		expect(endFrame.counts.done).toBe(recording.counts.total);
+		expect(endFrame.counts.leased).toBe(0);
+		expect(endFrame.counts.waiting).toBe(0);
+
+		// Also verify non-divisible durations reach their exact end with SEEK_STEP_MS.
+		expect(maxReachableSliderValue(71_653, SEEK_STEP_MS)).toBe(71_653);
+		expect(formatMachineSpeed(0.72)).toBe("1.4× speed");
+		expect(formatMachineSpeed(1.58)).toBe("0.6× speed");
 	});
 
 	test("before expiry, killed machine's leased files are not shown as done or waiting", () => {

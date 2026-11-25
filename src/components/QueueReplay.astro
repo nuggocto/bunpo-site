@@ -1,6 +1,12 @@
 ---
 import replayData from "../data/queue-replay.json";
-import { formatReplayTime, type ReplayRecording, stateAt } from "../lib/queue-replay";
+import {
+	formatMachineSpeed,
+	formatReplayTime,
+	type ReplayRecording,
+	SEEK_STEP_MS,
+	stateAt,
+} from "../lib/queue-replay";
 
 const recording = replayData as unknown as ReplayRecording;
 const finalFrame = stateAt(recording, recording.duration_ms);
@@ -25,9 +31,11 @@ ticks.push({ ms: durationMS, pct: 100, label: formatReplayTime(durationMS) });
 const laneNote = (lane: (typeof finalFrame.lanes)[number]) => {
 	if (lane.isKilled) return "killed mid-batch";
 	if (lane.isLate) return `starts +${Math.round(lane.firstMS / 1000)}s`;
-	if (lane.speed <= 0.8) return `fast (${lane.speed}×)`;
-	if (lane.speed >= 1.3) return `slow (${lane.speed}×)`;
-	return `${lane.speed}×`;
+	const speed = lane.speed > 0 ? 1 / lane.speed : 1;
+	const label = formatMachineSpeed(lane.speed);
+	if (speed >= 1.25) return `fast · ${label}`;
+	if (speed <= 0.75) return `slow · ${label}`;
+	return label;
 };
 
 const symbolFor = (kind: string) => {
@@ -65,7 +73,7 @@ const symbolFor = (kind: string) => {
 		<div class="replay-stat">
 			<span class="gain-label">Queue</span>
 			<span class="replay-stat-val mono" data-replay-queue>
-				{finalFrame.counts.running} running · {finalFrame.counts.waiting} waiting
+				{finalFrame.counts.leased} leased · {finalFrame.counts.waiting} waiting
 			</span>
 		</div>
 		<div class="replay-stat replay-stat-verdict">
@@ -104,7 +112,7 @@ const symbolFor = (kind: string) => {
 				data-replay-seek
 				min="0"
 				max={String(durationMS)}
-				step="100"
+				step={String(SEEK_STEP_MS)}
 				value={String(durationMS)}
 				aria-label="Replay time"
 				aria-valuetext={`${formatReplayTime(durationMS)}, Passed, ${finalFrame.counts.done} of ${finalFrame.counts.total} files done`}
@@ -174,7 +182,7 @@ const symbolFor = (kind: string) => {
 								{symbolFor(lane.statusKind)} {lane.statusText}
 							</span>
 							<span class="muted" data-lane-count>
-								{lane.acceptedAtT} {lane.acceptedAtT === 1 ? "file" : "files"}
+								{lane.acceptedAtT} done
 							</span>
 						</span>
 					</div>
@@ -293,7 +301,7 @@ const symbolFor = (kind: string) => {
 			<svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true">
 				<rect x="0.5" y="1" width="13" height="10" fill="#F6ECD9" stroke="#C47F17" stroke-width="1.2" />
 			</svg>
-			▸ running
+			▸ leased
 		</span>
 		<span class="replay-legend-item">
 			<svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true">
@@ -320,7 +328,7 @@ const symbolFor = (kind: string) => {
 				{
 					finalFrame.milestones.map((m) => (
 						<li>
-							<span class="mono">{formatReplayTime(m.atMS)}</span> — {m.caption}
+							<span class="mono">{formatReplayTime(m.atMS)}</span>: {m.caption}
 						</li>
 					))
 				}
@@ -330,14 +338,14 @@ const symbolFor = (kind: string) => {
 
 	<div class="chart-footnote">
 		<p>
-			<strong>Real build, synthetic test sleeps.</strong> Recorded locally from real{" "}
-			<code>bunpo-server</code> and <code>bunpo --queue</code> binaries (commit{" "}
+			<strong>Real build, synthetic test sleeps.</strong> Recorded locally with{" "}
+			<code>bunpo-server</code> and <code>bunpo --queue</code> (commit{" "}
 			<code>{recording.bunpo_commit}</code>,{" "}
 			<code>--lease-ttl {Math.round(recording.config.lease_ttl_ms / 1000)}s</code>,{" "}
-			<code>--max-batch {recording.config.max_batch}</code>), with sleeps in place of tests and
-			machine speeds, the late start (M{recording.late_machine}), and the <code>SIGKILL</code>{" "}
-			(M{recording.killed.machine}) set on purpose. Every lease, expiry, and retry timestamp comes
-			from the server API; only the <code>SIGKILL</code> moment comes from the recording harness.
+			<code>--max-batch {recording.config.max_batch}</code>). Each test sleeps instead of running
+			real assertions; machine speeds, the late start ({`M${recording.late_machine}`}), and killing{" "}
+			{`M${recording.killed.machine}`} were set on purpose. Lease, expiry, and retry times come from
+			the server API; only the kill time comes from the recording script.
 		</p>
 	</div>
 

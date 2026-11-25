@@ -29,7 +29,7 @@ export const GET: APIRoute = async ({ site }) => {
 		"Two servers speak the same HTTP JSON v1 protocol and serve the same static read-only web dashboard:",
 		"- Cloudflare Worker (worker/): SQLite-backed Durable Objects (BuildDO per build with 1,000-file catalog chunks, event_log, throttled lease_deadlines meta row across ~10 s hibernation, deadline and +7d deleteAll alarms; BuildIndex for 200 recent builds) + Workers Static Assets (0 Worker/DO calls for dashboard assets).",
 		"- Standalone Go server (bunpo-server): single static binary, in memory or CRC-32C persisted logs via --data DIR, TLS at reverse proxy.",
-		`Interactive 8-machine recorded replay: ${url("/queue/#replay")}`,
+		`Recorded 8-machine build replay: ${url("/queue/#replay")}`,
 		"Cloudflare Free-plan trial record: https://github.com/nuggocto/bunpo/blob/shrek/docs/trials/2026-11-25-cloudflare-free-trial.md",
 		"Protocol spec: https://github.com/nuggocto/bunpo/blob/shrek/docs/queue-protocol.md",
 		"Self-hosting: https://github.com/nuggocto/bunpo/blob/shrek/docs/self-hosting.md",
