@@ -194,7 +194,7 @@ that accept fork pull requests, or when your suite has very slow per-batch
 startup.
 
 GitHub Actions withholds secrets from fork pull requests, so this workflow
-fails on forks with a missing-token error—that is the safe outcome. Use the
+fails on forks with a missing-token error, which is the safe outcome. Use the
 static workflow above if your repository accepts fork pull requests, and never
 add an `if:` condition that can skip the required `bunpo` job, because GitHub
 counts a skipped required check as passed.

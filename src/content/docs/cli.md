@@ -157,7 +157,7 @@ Every command opens `--dir` (default `.bunpo`) via `os.Root`, preventing path tr
 
 ## Static mode vs. live queue
 
-Static mode needs no server, adds zero extra runner startups per machine, and works on fork pull requests without secrets. Live queue mode runs a self-hosted queue server (`bunpo-server` or Cloudflare Worker) and hands out batches as machines finish, reassigning work when a machine is slower, starts late, or gets killed.
+Static mode needs no server, starts each test runner only once per machine, and works on fork pull requests without secrets. Live queue mode runs a self-hosted queue server (`bunpo-server` or the Cloudflare Worker) and hands out batches as machines finish, reassigning work when a machine is slower, starts late, or gets killed.
 
 | Condition                                              | Recommended mode                              |
 | ------------------------------------------------------ | --------------------------------------------- |
@@ -166,5 +166,3 @@ Static mode needs no server, adds zero extra runner startups per machine, and wo
 | Mixed-speed runners (x64 + ARM64, noisy hosts)         | Live queue (`--queue`)                        |
 | Runners starting minutes apart behind CI queues        | Live queue (`--queue`)                        |
 | Spot or preemptible runners that can be killed mid-run | Live queue (`--queue`)                        |
-
-In 4-machine simulations with 5 s runner startup overhead per batch, static splitting beat the live queue when equal machines started together (827 s vs. 902 s), while the live queue won on mixed speeds (850 s vs. 1,077 s) and when one machine started 5 minutes late (976 s vs. 1,127 s).

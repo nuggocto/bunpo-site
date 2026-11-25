@@ -48,26 +48,30 @@ const runnerExample = `find tests \\( -name 'test_*.py' -o -name '*_test.py' \\)
 					<table>
 						<thead>
 							<tr>
-								<th>4-machine scenario (5 s batch startup)</th>
-								<th>Static split</th>
-								<th>Live queue</th>
+								<th>Condition</th>
+								<th>Recommended mode</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
-								<td>Equal machines starting together</td>
-								<td><strong>827 s</strong></td>
-								<td>902 s</td>
+								<td>Identical CI machines starting together</td>
+								<td><strong>Static</strong> (<code>split</code>, <code>record</code>, <code>verify</code>, <code>merge</code>)</td>
 							</tr>
 							<tr>
-								<td>Mixed speeds (1.8× and 1×)</td>
-								<td>1,077 s</td>
-								<td><strong>850 s</strong></td>
+								<td>Fork pull requests without repository secrets</td>
+								<td><strong>Static</strong></td>
 							</tr>
 							<tr>
-								<td>One machine starts 5 minutes late</td>
-								<td>1,127 s</td>
-								<td><strong>976 s</strong></td>
+								<td>Mixed-speed runners (x64 + ARM64, noisy hosts)</td>
+								<td><strong>Live queue</strong> (<code>--queue</code>)</td>
+							</tr>
+							<tr>
+								<td>Runners starting minutes apart behind CI queues</td>
+								<td><strong>Live queue</strong> (<code>--queue</code>)</td>
+							</tr>
+							<tr>
+								<td>Spot or preemptible runners killed mid-build</td>
+								<td><strong>Live queue</strong> (<code>--queue</code>)</td>
 							</tr>
 						</tbody>
 					</table>
