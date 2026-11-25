@@ -15,7 +15,7 @@ export const GET: APIRoute = async ({ site }) => {
 		"",
 		`- [Install](${url("/install/")}): GitHub Action (nuggocto/bunpo@v0), static binaries with SHA256SUMS, and Go install`,
 		`- [CLI reference](${url("/cli/")}): every bunpo and bunpo-server command, flag, exit code, env var, and .bunpo/ file`,
-		`- [Live queue (upcoming 0.1.0)](${url("/queue/")}): when to use static vs. --queue, Cloudflare Worker and bunpo-server overview`,
+		`- [Live queue & replay (upcoming 0.1.0)](${url("/queue/")}): recorded 8-machine build replay (/queue#replay), static vs. --queue guidance, Cloudflare Durable Objects architecture and Free-plan trial numbers, and bunpo-server overview`,
 		`- [Benchmarks & trials](${url("/benchmarks/")}): measured runs on production suites and synthetic benchmarks`,
 		`- [Changelog](${url("/changelog/")}): release history starting at v0.0.1`,
 		`- [Full LLM reference](${url("/llms-full.txt")}): complete CLI reference, live queue summary, and all five runner guides in one text file`,

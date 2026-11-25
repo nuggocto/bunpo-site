@@ -1,5 +1,6 @@
 ---
 import CopyBlock from "../components/CopyBlock.astro";
+import QueueReplay from "../components/QueueReplay.astro";
 import Base from "../layouts/Base.astro";
 
 const workerCommands = `cd worker
@@ -20,17 +21,38 @@ const runnerExample = `find tests \\( -name 'test_*.py' -o -name '*_test.py' \\)
 
 <Base
 	title="Live queue (upcoming in 0.1.0) — Bunpō"
-	description="Self-hosted dynamic test queue for mixed-speed, late-starting, or preemptible CI runners. Upcoming in Bunpō 0.1.0."
+	description="Watch a recorded 8-machine live-queue build recover from a killed runner, and see how Bunpō runs on Cloudflare Durable Objects or bunpo-server. Upcoming in 0.1.0."
 >
 	<span class="eyebrow">live queue · upcoming in 0.1.0</span>
 	<h1>Self-hosted live queue</h1>
 	<p class="lead">
 		Coming in <code>0.1.0</code> (not yet released; the current release is <code>v0.0.7</code>).{" "}
-		<code>bunpo --queue</code> pulls batches of test files dynamically as each machine finishes,
-		and reassigns leases when a runner dies or loses a report.
+		<code>bunpo --queue</code> pulls batches of test files as each machine finishes, and reassigns
+		leases when a runner is killed or loses a report.{" "}
+		<a href="#replay">Watch the replay</a> or jump to{" "}
+		<a href="#cloudflare">how it runs on Cloudflare</a>.
 	</p>
 
-	<section class="band" id="when-to-use" style="margin-top: 2rem;">
+	<section class="band" id="replay" style="margin-top: 2rem;">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Replay</strong>
+				<span>Recorded build · 8 machines, 120 files</span>
+			</div>
+			<div>
+				<h2>Eight machines pull work, one gets killed, the build still passes.</h2>
+				<p>
+					This is a recording of a real local build from <code>bunpo-server</code> and{" "}
+					<code>bunpo --queue</code> with sleeps in place of tests. Fast machines pull more batches,
+					M6 starts late, M7 is <code>SIGKILL</code>ed mid-batch, and its expired files move to the
+					survivors one by one.
+				</p>
+				<QueueReplay />
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="when-to-use">
 		<div class="band-head">
 			<div class="band-label">
 				<strong>Static vs. queue</strong>
@@ -39,10 +61,10 @@ const runnerExample = `find tests \\( -name 'test_*.py' -o -name '*_test.py' \\)
 			<div>
 				<h2>Use static splitting unless your machines drift apart.</h2>
 				<p>
-					Dynamic batching starts your test runner more than once per machine. When identical
-					machines start together, static splitting (<code>bunpo split</code> /{" "}
-					<code>verify</code>) finishes faster, needs no server, and works on fork pull requests
-					without secrets.
+					Dynamic batching starts your test runner once per batch instead of once per machine. When
+					identical machines start together, static splitting (<code>bunpo split</code> and{" "}
+					<code>bunpo verify</code>) needs no server, avoids extra runner startups, and works on
+					fork pull requests without secrets.
 				</p>
 				<div class="table-wrap">
 					<table>
@@ -76,6 +98,115 @@ const runnerExample = `find tests \\( -name 'test_*.py' -o -name '*_test.py' \\)
 						</tbody>
 					</table>
 				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="cloudflare">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>How it runs on Cloudflare</strong>
+				<span>Durable Objects + SQLite</span>
+			</div>
+			<div>
+				<h2>One SQLite Durable Object per build, zero idle servers.</h2>
+				<p>
+					The Cloudflare Worker in <code>worker/</code> gives each build its own SQLite-backed
+					Durable Object (<code>BuildDO</code>) so builds never contend with each other. Tables are
+					created only when <code>init</code> persists; a <code>GET</code> on an unknown build ID
+					writes zero rows.
+				</p>
+				<ul class="steps-list">
+					<li>
+						<span class="step-cmd">storage</span>
+						<div>
+							The test catalog is stored once in 1,000-file rows (<code>catalog_chunks</code>,
+							about 68 KB/row for 60-byte paths, well under SQLite's 100 KB statement and 8 MB row
+							limits). State changes append one row per decision to <code>event_log</code> across
+							six event types, so replay never reads a clock.
+						</div>
+					</li>
+					<li>
+						<span class="step-cmd">leases</span>
+						<div>
+							Idle Durable Objects hibernate after about 10 s. <code>BuildDO</code> keeps ungraced
+							lease deadlines in memory and throttles writes into one <code>meta</code> row
+							(<code>lease_deadlines</code>) only when a heartbeat pushes a lease past{" "}
+							<code>persisted + floor(ttl / 2)</code> (25 to 27 <code>meta</code> writes in a
+							64-machine 10-minute build). On wake, active leases receive{" "}
+							<code>floor(ttl / 2)</code> grace without persisting the graced value, so leases
+							never expire early and dead runners still expire within half a TTL.
+						</div>
+					</li>
+					<li>
+						<span class="step-cmd">alarms</span>
+						<div>
+							Each <code>BuildDO</code> schedules its lifecycle alarm in the same synchronous turn
+							as the SQLite write: first at <code>build_deadline</code> while running, then 7 days
+							after completion to call <code>ctx.storage.deleteAll()</code> and free storage.
+						</div>
+					</li>
+					<li>
+						<span class="step-cmd">assets</span>
+						<div>
+							A separate SQLite <code>BuildIndex</code> object keeps up to 200 recent build
+							summaries (at most two inline RPCs per build). Dashboard files (<code>/</code> and{" "}
+							<code>/dashboard/*</code>) are served directly by Workers Static Assets at 0 Worker
+							requests and 0 Durable Object wakes.
+						</div>
+					</li>
+				</ul>
+
+				<div class="table-wrap" style="margin-top: 1.5rem;">
+					<table>
+						<thead>
+							<tr>
+								<th>Measured on Cloudflare Workers Free (2026-11-25)</th>
+								<th>Result</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Two full trial sessions (929 Worker requests total)</td>
+								<td>0 errors; 21 builds of 20,000 files passed (including 40 builds started over 50 s, 360 requests all HTTP 200)</td>
+							</tr>
+							<tr>
+								<td>Heartbeats across DO hibernation</td>
+								<td>8 machines / 400 files held leases up to 30,132 ms on a 15 s TTL; 1 machine held a 150,089 ms lease with 20 s heartbeats; 114 recorded heartbeats &le; 1 ms CPU</td>
+							</tr>
+							<tr>
+								<td><code>BuildDO</code> CPU (Run 2 sustained load)</td>
+								<td><code>init</code>: 14 to 46 ms at 5,000 files (median 24 ms), 31 to 73 ms at 20,000 (median 49 ms); <code>status</code> up to 54 ms; deadline <code>alarm</code> 7 to 43 ms</td>
+							</tr>
+							<tr>
+								<td>Worker <code>fetch</code> CPU</td>
+								<td>Up to 8 ms on 20,000-file <code>init</code> requests (1.04 MB body) and 6 ms on 5,000-file builds (0.26 MB); 4 MiB bodies untested</td>
+							</tr>
+							<tr>
+								<td>Default <code>MAX_TESTS</code> and trace sampling</td>
+								<td><code>MAX_TESTS</code> defaults to 5,000 (up to 20,000) for Worker <code>fetch</code> CPU margin and 100,000 SQLite rows written/day; traces sampled at 5%, logs at 100%</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<p class="small muted">
+					Cloudflare's documentation disagrees on the Free-plan CPU limit inside a Durable Object:
+					the Durable Objects limits table lists 30 s default with no Free value, while its FAQ
+					says Durable Objects share Workers' per-invocation CPU limits and the Workers limits page
+					gives 10 ms on Free. Across both trials, 130 Durable Object calls exceeded 10 ms (up to
+					73 ms) and none was stopped. If a stricter limit is ever enforced, the object throws, the
+					Worker answers <code>503 storage_error</code>, and runners retry for 2 minutes before
+					exiting 1, never producing a false pass. Full raw numbers and untested gaps live in{" "}
+					<a
+						href="https://github.com/nuggocto/bunpo/blob/shrek/docs/trials/2026-11-25-cloudflare-free-trial.md"
+						target="_blank"
+						rel="noreferrer"
+					>
+						docs/trials/2026-11-25-cloudflare-free-trial.md
+					</a>
+					.
+				</p>
 			</div>
 		</div>
 	</section>

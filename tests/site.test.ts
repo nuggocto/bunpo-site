@@ -171,6 +171,14 @@ describe("built static output (when dist/ exists)", () => {
 			expect(existsSync(page), `missing built artifact: ${page}`).toBe(true);
 		}
 
+		const queueHtml = readFileSync("dist/queue/index.html", "utf8");
+		expect(queueHtml).toContain("data-queue-replay");
+		expect(queueHtml).toContain('id="cloudflare"');
+		expect(queueHtml).toContain("2026-11-25-cloudflare-free-trial.md");
+
+		const homeHtml = readFileSync("dist/index.html", "utf8");
+		expect(homeHtml).toContain("/queue#replay");
+
 		const sitemap = readFileSync("dist/sitemap.xml", "utf8");
 		expect(sitemap).toContain("https://bunpo.org/cli/");
 		expect(sitemap).toContain("https://bunpo.org/queue/");
