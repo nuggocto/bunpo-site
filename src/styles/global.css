@@ -1824,14 +1824,6 @@ td {
 	margin-bottom: 0.3rem;
 }
 
-.queue-callout {
-	border: 1px solid var(--rule);
-	border-left: 3px solid var(--honey);
-	background-color: var(--surface);
-	padding: 1rem 1.15rem;
-	margin-top: 1.25rem;
-}
-
 @media (max-width: 760px) {
 	.replay-panel {
 		padding: 1rem;
