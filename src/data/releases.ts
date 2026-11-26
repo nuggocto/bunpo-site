@@ -6,9 +6,22 @@ export interface Release {
 	notes: string[];
 }
 
-export const LATEST_VERSION = "v0.1.1";
+export const LATEST_VERSION = "v0.1.2";
 
 export const releases: Release[] = [
+	{
+		version: "v0.1.2",
+		date: "2026-11-26",
+		summary:
+			"Live-queue dashboard fixes for failed detail refreshes, empty timeline pages, and blocked sessionStorage, plus a local-trial prose correction.",
+		url: "https://github.com/nuggocto/bunpo/releases/tag/v0.1.2",
+		notes: [
+			"Keep retrying live-queue dashboard details after a failed page request (such as HTTP 503) even when the build status is already terminal, stopping polling only once timeline and test details catch up or retries run out.",
+			'Keep the timeline\'s "Load next 200 tests into timeline" pager visible when the loaded pages have no lease attempts yet.',
+			"Show an error message instead of failing silently when signing into the dashboard with sessionStorage blocked, keeping the token field intact.",
+			"Corrected the LaTabdhir PostgreSQL prose summary in docs/trials/2026-11-21-souhib-local-trial.md to match its measured table (369.0–379.3 s, 2.8–5.7% above the 359 s prediction).",
+		],
+	},
 	{
 		version: "v0.1.1",
 		date: "2026-11-26",
