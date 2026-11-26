@@ -205,7 +205,7 @@ jobs:
 
 Change `machine: [0, 1, 2, 3]` to use more or fewer machines. The actions are
 shown by tag; if you pin `nuggocto/bunpo` to a commit SHA, also pass
-`with: version: v0.1.0` (matching that commit's tag) so the installed binary is
+`with: version: v0.1.1` (matching that commit's tag) so the installed binary is
 pinned too.
 
 ## Common setups
