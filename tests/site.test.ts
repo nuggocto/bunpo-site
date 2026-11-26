@@ -154,6 +154,13 @@ describe("site content & data integrity", () => {
 		expect(createHash("sha256").update(INSTALL_SH, "utf8").digest("hex")).toBe(INSTALL_SH_SHA256);
 		expect(createHash("sha256").update(INSTALL_PS1, "utf8").digest("hex")).toBe(INSTALL_PS1_SHA256);
 	});
+
+	test("install.ps1 has no variable directly followed by a colon", () => {
+		// PowerShell reads "$name:" as a drive-qualified variable and refuses to parse
+		// the whole script, so write "${name}:" instead. $env: is the one intended use.
+		const bad = INSTALL_PS1.match(/\$(?!env:)[A-Za-z_]\w*:/g) ?? [];
+		expect(bad).toEqual([]);
+	});
 });
 
 describe("built static output (when dist/ exists)", () => {

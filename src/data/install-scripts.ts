@@ -260,7 +260,7 @@ export function renderInstallPs1(version: string, checksums: ReleaseChecksums): 
 		}
 
 		if ($expected -cnotmatch '^[0-9a-f]{64}$') {
-			throw "Invalid checksum format for $asset: $expected"
+			throw "Invalid checksum format for \${asset}: $expected"
 		}
 
 		$actual = (Get-FileHash -LiteralPath $downloaded -Algorithm SHA256).Hash.ToLowerInvariant()
