@@ -28,3 +28,7 @@ Deployed automatically on Cloudflare Pages (`bunpo-site` -> `bunpo.org`) from th
 - **Build command:** `bun run build`
 - **Build output directory:** `dist`
 - **Custom domain:** `bunpo.org` (with `www.bunpo.org` redirecting 301 to `https://bunpo.org`)
+
+## Releases
+
+On each `bunpo` release, update `LATEST_VERSION`, the release entry, and its six CLI SHA-256 hashes in `src/data/releases.ts` (`bun test` fails if any hash is missing or invalid).
