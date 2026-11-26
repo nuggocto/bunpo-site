@@ -298,6 +298,14 @@ main {
 	gap: 0.6rem;
 }
 
+.footer-brand picture,
+.footer-mark {
+	display: block;
+	flex-shrink: 0;
+	width: 26px;
+	height: 26px;
+}
+
 .footer-links {
 	display: flex;
 	gap: 1.25rem;

@@ -151,7 +151,10 @@ const isCurrent = (href: string, external?: boolean) =>
 		<footer class="site-footer">
 			<div class="wrap footer-inner">
 				<div class="footer-brand">
-					<img src={asset("/brand/logo-mono.svg")} alt="" width="24" height="24" />
+					<picture>
+						<source srcset={asset("/brand/logo-mark.webp")} type="image/webp" />
+						<img src={asset("/brand/logo-mark.png")} alt="" class="footer-mark" width="26" height="26" />
+					</picture>
 					<span class="mono">bunpo {LATEST_VERSION} · Apache-2.0 · self-hosted, no telemetry</span>
 				</div>
 				<div class="footer-links">
