@@ -41,7 +41,7 @@ import Base from "../layouts/Base.astro";
 					<code>.github/workflows/e2e.yml</code> from the Playwright guide alone: 68 specs,
 					232 cases, Docker Compose per runner, across one x64 runner and one ARM64 runner.
 				</p>
-				<div class="table-wrap">
+				<div class="table-wrap" tabindex="0">
 					<table>
 						<thead>
 							<tr>
@@ -104,7 +104,7 @@ import Base from "../layouts/Base.astro";
 					(~59s after rerunning two
 					noisy shards).
 				</p>
-				<div class="table-wrap">
+				<div class="table-wrap" tabindex="0">
 					<table>
 						<thead>
 							<tr>
@@ -201,7 +201,7 @@ import Base from "../layouts/Base.astro";
 					per machine). The declared target is predicted slowest / fastest ≤ 1.10 on the
 					Many files suite.
 				</p>
-				<div class="table-wrap">
+				<div class="table-wrap" tabindex="0">
 					<table>
 						<thead>
 							<tr>
@@ -260,7 +260,7 @@ import Base from "../layouts/Base.astro";
 					runs (8-core Linux x86-64), the <code>v0.1.0</code> release binaries, and the
 					live GitHub Actions trial:
 				</p>
-				<div class="table-wrap">
+				<div class="table-wrap" tabindex="0">
 					<table>
 						<thead>
 							<tr>
@@ -298,6 +298,18 @@ import Base from "../layouts/Base.astro";
 						</tbody>
 					</table>
 				</div>
+				<p class="small muted">
+					Full CLI timing method and numbers (<code>v0.1.0</code> and <code>v0.0.7</code>, 50,000
+					files on 256 machines) are recorded in{" "}
+					<a
+						href="https://github.com/nuggocto/bunpo/blob/shrek/docs/benchmark.md#large-suite-cli-timing-50000-tests-256-machines"
+						target="_blank"
+						rel="noreferrer"
+					>
+						<code>docs/benchmark.md</code>
+					</a>
+					.
+				</p>
 			</div>
 		</div>
 	</section>

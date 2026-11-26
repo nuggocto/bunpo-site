@@ -49,13 +49,13 @@ const alternatives = [
 	},
 	{
 		name: "Knapsack Pro",
-		split: "Recorded times through its API. Machines pull files from a queue.",
-		pick: "Your machines differ in speed or start late, and a paid service is fine (free for non-commercial open source).",
+		split: "Recorded times through a hosted queue API.",
+		pick: "You want someone else to run the queue server (paid per committer; free for non-commercial open source).",
 	},
 	{
 		name: "Bunpō",
-		split: "Recorded time of each file, from your CI cache (static) or a self-hosted queue.",
-		pick: "You want one free tool for several runners: static with no server, or self-hosted --queue for uneven runners.",
+		split: "Recorded file times, from your CI cache or your own queue server.",
+		pick: "You want one free tool for several runners, with no vendor server.",
 		self: true,
 	},
 ];
@@ -260,7 +260,7 @@ const alternatives = [
 			</div>
 			<div>
 				<h2>You may not need Bunpō.</h2>
-				<div class="table-wrap">
+				<div class="table-wrap" tabindex="0">
 					<table class="compare">
 						<thead>
 							<tr>

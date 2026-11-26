@@ -65,7 +65,7 @@ const runnerExample = `find tests \\( -name 'test_*.py' -o -name '*_test.py' \\)
 					<code>bunpo verify</code>) needs no server, avoids extra runner startups, and works on
 					fork pull requests without secrets.
 				</p>
-				<div class="table-wrap">
+				<div class="table-wrap" tabindex="0">
 					<table>
 						<thead>
 							<tr>
@@ -169,8 +169,8 @@ const runnerExample = `find tests \\( -name 'test_*.py' -o -name '*_test.py' \\)
 								<td>929 Worker requests, 0 errors</td>
 							</tr>
 							<tr>
-								<td>40 large builds started over 50 s</td>
-								<td>20 of 5,000 files, 20 of 20,000; 360 requests, all HTTP 200</td>
+								<td>40 load-test builds started over 50 s</td>
+								<td>20 builds of 5,000 files and 20 of 20,000; 360 requests, all HTTP 200 (left to reach their deadline on purpose)</td>
 							</tr>
 							<tr>
 								<td>Heartbeats (8 machines, 400 files)</td>
@@ -270,9 +270,13 @@ const runnerExample = `find tests \\( -name 'test_*.py' -o -name '*_test.py' \\)
 				</p>
 				<CopyBlock label="Worker step (pytest example)" code={runnerExample} />
 				<p class="small">
-					See the <strong>Live queue</strong> section in any{" "}
-					<a href="/guides">runner guide</a> (pytest, Jest, Vitest, RSpec, Playwright), check all
-					flags in the <a href="/cli">CLI reference</a>, or read the{" "}
+					Copy <code>run-batch.sh</code> from the <strong>Live queue</strong> section of your runner
+					guide (<a href="/guides/pytest#live-queue">pytest</a>,{" "}
+					<a href="/guides/jest#live-queue">Jest</a>,{" "}
+					<a href="/guides/vitest#live-queue">Vitest</a>,{" "}
+					<a href="/guides/rspec#live-queue">RSpec</a>,{" "}
+					<a href="/guides/playwright#live-queue">Playwright</a>), check all flags in the{" "}
+					<a href="/cli">CLI reference</a>, or read the{" "}
 					<a
 						href="https://github.com/nuggocto/bunpo/blob/shrek/docs/queue-protocol.md"
 						target="_blank"
