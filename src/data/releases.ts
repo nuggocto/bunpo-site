@@ -16,7 +16,7 @@ export const releases: Release[] = [
 			"Clean multi-page dashboard refresh, alarm-backed BuildIndex retry on Cloudflare, runner-ID batch filenames, and strict server checksum verification.",
 		url: "https://github.com/nuggocto/bunpo/releases/tag/v0.1.1",
 		notes: [
-			"Reset the live-queue dashboard to fresh page 1 on refresh so multi-page views do not keep stale test states or miss newly matching filtered tests.",
+			"Reload all loaded timeline and test pages from cursor 0 along the next_cursor chain on live-queue dashboard refresh (stopping early when next_cursor is null), keeping loaded pages without stale states or missed filter matches.",
 			"Retry failed BuildIndex updates in the Cloudflare Worker (BuildDO) by alarm with exponential backoff (60 s up to 1 h, capped at 8 retries, never past the 7-day deletion alarm) so finished builds converge without a client request.",
 			"Name bunpo --queue batch files by runner ID (queue-<runner-id>.txt) instead of --index so two runners sharing --index and --dir do not overwrite each other's test list.",
 			"Fail the bunpo-server release smoke check explicitly when its checksum is missing from SHA256SUMS or does not match.",
