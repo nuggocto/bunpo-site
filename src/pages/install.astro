@@ -1,7 +1,14 @@
 ---
 import CopyBlock from "../components/CopyBlock.astro";
+import { INSTALL_PS1_SHA256, INSTALL_SH_SHA256 } from "../data/install-scripts";
 import { LATEST_VERSION } from "../data/releases";
 import Base from "../layouts/Base.astro";
+
+const quickUnix = `curl -fsSL https://bunpo.org/install.sh | sh`;
+const quickUnixPinned = `curl -fsSL https://bunpo.org/install.sh | sh -s -- --version ${LATEST_VERSION}`;
+const quickWindows = `irm https://bunpo.org/install.ps1 | iex`;
+const readFirstUnix = `curl -fsSL https://bunpo.org/install.sh -o install.sh
+sh install.sh`;
 
 const actionBasic = `- uses: nuggocto/bunpo@v0`;
 
@@ -75,16 +82,54 @@ const platforms = [
 	<span class="eyebrow">install · {LATEST_VERSION}</span>
 	<h1>Install Bunpō</h1>
 	<p class="lead">
-		Add one line in GitHub Actions, drop a verified static binary onto any CI runner, or build
-		from source with Go. Static mode needs no server; neither mode has runtime dependencies or an
-		account.
+		One command installs the verified binary on Linux, macOS, or Windows, or use the GitHub
+		Action. Static mode needs no server; neither mode has runtime dependencies or an account.
 	</p>
 
-	<section class="band" id="github-actions" style="margin-top: 2rem;">
+	<section class="band" id="quick-install" style="margin-top: 2rem;">
+		<div class="band-head">
+			<div class="band-label">
+				<strong>Quick install</strong>
+				<span>One line · verified</span>
+			</div>
+			<div>
+				<h2>One command per platform</h2>
+				<p>
+					Installs <code>bunpo</code> {LATEST_VERSION} into <code>~/.local/bin</code> on Linux and
+					macOS (no <code>sudo</code>) or <code>%USERPROFILE%\bin</code> on Windows, verifying the
+					pinned SHA-256 and checking <code>bunpo --version</code> before moving it into place.
+				</p>
+				<CopyBlock label="Linux and macOS" code={quickUnix} />
+				<CopyBlock label={`Pin a version (Linux and macOS)`} code={quickUnixPinned} />
+				<CopyBlock label="Windows PowerShell" code={quickWindows} />
+				<p class="small muted">
+					In CI, pin a version with <code>--version {LATEST_VERSION}</code> (or{" "}
+					<code>$env:BUNPO_VERSION="{LATEST_VERSION}"</code> on Windows), or use the GitHub Action
+					below.
+				</p>
+
+				<h3 style="margin-top: 1.5rem;">Read the script first</h3>
+				<p class="small muted">
+					Inspect <a href="/install.sh">/install.sh</a> or <a href="/install.ps1">/install.ps1</a>{" "}
+					before running, or save and check its SHA-256 locally:
+				</p>
+				<CopyBlock label="Download, inspect, then run" code={readFirstUnix} />
+				<p class="small muted">
+					<code>install.sh</code> SHA-256:{" "}
+					<code style="overflow-wrap: anywhere;">{INSTALL_SH_SHA256}</code>
+					<br />
+					<code>install.ps1</code> SHA-256:{" "}
+					<code style="overflow-wrap: anywhere;">{INSTALL_PS1_SHA256}</code>
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="band" id="github-actions">
 		<div class="band-head">
 			<div class="band-label">
 				<strong>GitHub Actions</strong>
-				<span>Recommended</span>
+				<span>Recommended for CI</span>
 			</div>
 			<div>
 				<h2>One step puts bunpo on PATH</h2>
@@ -107,11 +152,11 @@ const platforms = [
 	<section class="band" id="binaries">
 		<div class="band-head">
 			<div class="band-label">
-				<strong>Static binaries</strong>
-				<span>Any CI or local shell</span>
+				<strong>By hand</strong>
+				<span>Manual download &amp; check</span>
 			</div>
 			<div>
-				<h2>Download and verify against SHA256SUMS</h2>
+				<h2>By hand: download and verify against SHA256SUMS</h2>
 				<p>
 					Prebuilt static binaries (7.0 MiB on <code>linux/amd64</code>, 6.4 to 7.2 MiB across
 					targets, Go standard library only) are published on every release for Linux, macOS, and
