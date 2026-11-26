@@ -298,6 +298,11 @@ main {
 	gap: 0.6rem;
 }
 
+/* Wrap only between the footer's segments, never inside "self-hosted". */
+.footer-meta span {
+	white-space: nowrap;
+}
+
 .footer-brand picture,
 .footer-mark {
 	display: block;
