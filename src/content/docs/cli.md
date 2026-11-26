@@ -165,4 +165,4 @@ Static mode needs no server, starts each test runner only once per machine, and 
 | Fork pull requests without repository secrets          | Static                                        |
 | Mixed-speed runners (x64 + ARM64, noisy hosts)         | Live queue (`--queue`)                        |
 | Runners starting minutes apart behind CI queues        | Live queue (`--queue`)                        |
-| Spot or preemptible runners that can be killed mid-run | Live queue (`--queue`)                        |
+| Spot or preemptible runners that can be killed mid-build | Live queue (`--queue`)                        |
