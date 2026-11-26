@@ -159,10 +159,10 @@ Every command opens `--dir` (default `.bunpo`) via `os.Root`, preventing path tr
 
 Static mode needs no server, starts each test runner only once per machine, and works on fork pull requests without secrets. Live queue mode runs a self-hosted queue server (`bunpo-server` or the Cloudflare Worker) and hands out batches as machines finish, reassigning work when a machine is slower, starts late, or gets killed.
 
-| Condition                                              | Recommended mode                              |
-| ------------------------------------------------------ | --------------------------------------------- |
-| Identical CI machines starting together                | Static (`split`, `record`, `verify`, `merge`) |
-| Fork pull requests without repository secrets          | Static                                        |
-| Mixed-speed runners (x64 + ARM64, noisy hosts)         | Live queue (`--queue`)                        |
-| Runners starting minutes apart behind CI queues        | Live queue (`--queue`)                        |
+| Condition                                                | Recommended mode                              |
+| -------------------------------------------------------- | --------------------------------------------- |
+| Identical CI machines starting together                  | Static (`split`, `record`, `verify`, `merge`) |
+| Fork pull requests without repository secrets            | Static                                        |
+| Mixed-speed runners (x64 + ARM64, noisy hosts)           | Live queue (`--queue`)                        |
+| Runners starting minutes apart behind CI queues          | Live queue (`--queue`)                        |
 | Spot or preemptible runners that can be killed mid-build | Live queue (`--queue`)                        |
