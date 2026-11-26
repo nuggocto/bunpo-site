@@ -12,13 +12,13 @@ const actionPinned = `- uses: nuggocto/bunpo@v0
 const linuxInstall = `ARCH=amd64 # or arm64
 curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-linux-$ARCH && \\
 curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS && \\
-sha256sum --ignore-missing -c SHA256SUMS && \\
+grep " bunpo-linux-$ARCH$" SHA256SUMS | sha256sum -c && \\
 chmod +x bunpo-linux-$ARCH && mv bunpo-linux-$ARCH /usr/local/bin/bunpo`;
 
 const macosInstall = `ARCH=arm64 # or amd64 for Intel
 curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-darwin-$ARCH && \\
 curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS && \\
-shasum -a 256 --ignore-missing -c SHA256SUMS && \\
+grep " bunpo-darwin-$ARCH$" SHA256SUMS | shasum -a 256 -c && \\
 chmod +x bunpo-darwin-$ARCH && mv bunpo-darwin-$ARCH /usr/local/bin/bunpo`;
 
 const windowsInstall = `$arch = "amd64" # or arm64
@@ -36,7 +36,7 @@ const sourceInstall = `go install github.com/nuggocto/bunpo/cmd/bunpo@${LATEST_V
 const serverLinuxInstall = `ARCH=amd64 # or arm64
 curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/bunpo-server-linux-$ARCH && \\
 curl -fsSLO https://github.com/nuggocto/bunpo/releases/download/${LATEST_VERSION}/SHA256SUMS && \\
-sha256sum --ignore-missing -c SHA256SUMS && \\
+grep " bunpo-server-linux-$ARCH$" SHA256SUMS | sha256sum -c && \\
 chmod +x bunpo-server-linux-$ARCH && mv bunpo-server-linux-$ARCH /usr/local/bin/bunpo-server`;
 
 const serverSourceInstall = `go install github.com/nuggocto/bunpo/cmd/bunpo-server@${LATEST_VERSION}`;
