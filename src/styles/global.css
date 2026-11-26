@@ -121,15 +121,23 @@ img {
 	color: var(--ink);
 	justify-self: start;
 	flex-shrink: 0;
+	white-space: nowrap;
 }
 
 .brand-link:hover {
 	color: var(--honey);
 }
 
+.brand-link picture {
+	flex-shrink: 0;
+	width: 38px;
+	height: 38px;
+}
+
 .brand-mark {
 	width: 38px;
 	height: 38px;
+	min-width: 38px;
 	flex-shrink: 0;
 }
 
@@ -1155,7 +1163,12 @@ pre code {
 
 .table-wrap {
 	overflow-x: auto;
+	max-width: 100%;
 	margin: 1rem 0 1.25rem;
+	border: 1px solid var(--rule);
+	background-color: var(--surface);
+	scrollbar-width: thin;
+	scrollbar-color: var(--honey) var(--bg-subtle);
 }
 
 table {
@@ -1164,6 +1177,14 @@ table {
 	font-size: var(--fs-small);
 	background-color: var(--surface);
 	border: 1px solid var(--rule);
+}
+
+.table-wrap > table {
+	border: 0;
+}
+
+.prose .table-wrap > table {
+	min-width: 34rem;
 }
 
 th,
@@ -1216,7 +1237,16 @@ td {
 }
 
 .prose :not(pre) > code {
-	overflow-wrap: anywhere;
+	overflow-wrap: break-word;
+}
+
+.prose :not(pre) > code.nowrap {
+	white-space: nowrap;
+}
+
+.prose table :not(pre) > code {
+	overflow-wrap: normal;
+	word-break: normal;
 }
 
 .prose ul,
@@ -1334,7 +1364,13 @@ td {
 	margin-top: 1rem;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1020px) {
+	.site-nav {
+		gap: 1.25rem;
+	}
+}
+
+@media (max-width: 899px) {
 	.header-inner {
 		display: flex;
 		justify-content: space-between;
@@ -1348,7 +1384,9 @@ td {
 	.nav-mobile {
 		display: block;
 	}
+}
 
+@media (max-width: 760px) {
 	.chart-groups,
 	.gain-strip,
 	.release-entry,
@@ -1843,12 +1881,34 @@ td {
 	}
 }
 
+@media (max-width: 680px) {
+	.replay-tick-edge {
+		display: none;
+	}
+}
+
+@media (max-width: 560px) {
+	.replay-lane-head {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.1rem;
+	}
+
+	.replay-lane-right {
+		display: flex;
+		justify-content: space-between;
+		width: 100%;
+	}
+}
+
 @media (max-width: 480px) {
 	.replay-milestones {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
+}
 
-	.replay-tick-edge {
+@media (max-width: 420px) {
+	.replay-tick-minor {
 		display: none;
 	}
 }

@@ -272,6 +272,7 @@ const symbolFor = (kind: string) => {
 					"replay-tick",
 					isFirst ? "replay-tick-start" : isLast ? "replay-tick-end" : "replay-tick-mid",
 					!isLast && tk.pct > 75 ? "replay-tick-edge" : "",
+					!isFirst && !isLast && idx % 2 === 1 ? "replay-tick-minor" : "",
 				]
 					.filter(Boolean)
 					.join(" ");
