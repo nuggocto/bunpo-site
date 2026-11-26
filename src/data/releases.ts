@@ -1,9 +1,22 @@
+export const CLI_ASSETS = [
+	"bunpo-linux-amd64",
+	"bunpo-linux-arm64",
+	"bunpo-darwin-amd64",
+	"bunpo-darwin-arm64",
+	"bunpo-windows-amd64.exe",
+	"bunpo-windows-arm64.exe",
+] as const;
+
+export type CliAsset = (typeof CLI_ASSETS)[number];
+export type ReleaseChecksums = Record<CliAsset, string>;
+
 export interface Release {
 	version: string;
 	date: string;
 	summary: string;
 	url: string;
 	notes: string[];
+	checksums?: ReleaseChecksums;
 }
 
 export const LATEST_VERSION = "v0.1.2";
@@ -21,6 +34,14 @@ export const releases: Release[] = [
 			"Show an error message instead of failing silently when signing into the dashboard with sessionStorage blocked, keeping the token field intact.",
 			"Correct the LaTabdhir PostgreSQL prose summary in docs/trials/2026-11-21-souhib-local-trial.md to match its measured table (369.0–379.3 s, 2.8–5.7% above the 359 s prediction).",
 		],
+		checksums: {
+			"bunpo-linux-amd64": "df3a23aab1333b1163940c2a844ec6afca6d377b53533fc1d4688033855de7c8",
+			"bunpo-linux-arm64": "712f4f1b1efb254add4a1ccc576483235226328879bfc6a23d946353eb5c8e29",
+			"bunpo-darwin-amd64": "5d98b5fbe14191bde72e76839e38d8d9d98823181411566dd6b64f5008d92e83",
+			"bunpo-darwin-arm64": "3a9280818f26c06433562bcd3b92736f490f9aebba05f7d97f751d7b5e2acbeb",
+			"bunpo-windows-amd64.exe": "c630669accd404a774a331c32804d32a5c1607ab56518e049b0db0a78851d85f",
+			"bunpo-windows-arm64.exe": "ee688a2a39932145a9c71ce6368b6ae475cfede2d96d7e98d71cfc6c37232478",
+		},
 	},
 	{
 		version: "v0.1.1",

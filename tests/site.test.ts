@@ -1,8 +1,15 @@
 import { describe, expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { formatSeconds, trials, workedExample } from "../src/data/benchmarks";
-import { LATEST_VERSION, releases } from "../src/data/releases";
+import {
+	INSTALL_PS1,
+	INSTALL_PS1_SHA256,
+	INSTALL_SH,
+	INSTALL_SH_SHA256,
+} from "../src/data/install-scripts";
+import { CLI_ASSETS, LATEST_VERSION, releases } from "../src/data/releases";
 
 describe("design constraints (global.css)", () => {
 	const css = readFileSync("src/styles/global.css", "utf8");
@@ -132,6 +139,21 @@ describe("site content & data integrity", () => {
 	test("latest release matches changelog top entry", () => {
 		expect(releases[0]?.version).toBe(LATEST_VERSION);
 	});
+
+	test("latest release provides valid SHA-256 hashes for all six CLI assets", () => {
+		const latest = releases.find((r) => r.version === LATEST_VERSION);
+		expect(latest, `missing release entry for ${LATEST_VERSION}`).toBeDefined();
+		expect(latest?.checksums, `missing checksums for ${LATEST_VERSION}`).toBeDefined();
+		for (const asset of CLI_ASSETS) {
+			const hash = latest?.checksums?.[asset];
+			expect(hash, `missing SHA-256 for ${asset}`).toBeDefined();
+			expect(hash, `invalid SHA-256 for ${asset}`).toMatch(/^[0-9a-f]{64}$/);
+		}
+		expect(INSTALL_SH).toContain(`PINNED_VERSION='${LATEST_VERSION}'`);
+		expect(INSTALL_PS1).toContain(`$pinnedVersion = "${LATEST_VERSION}"`);
+		expect(createHash("sha256").update(INSTALL_SH, "utf8").digest("hex")).toBe(INSTALL_SH_SHA256);
+		expect(createHash("sha256").update(INSTALL_PS1, "utf8").digest("hex")).toBe(INSTALL_PS1_SHA256);
+	});
 });
 
 describe("built static output (when dist/ exists)", () => {
@@ -141,6 +163,8 @@ describe("built static output (when dist/ exists)", () => {
 		for (const page of [
 			"dist/index.html",
 			"dist/install/index.html",
+			"dist/install.sh",
+			"dist/install.ps1",
 			"dist/cli/index.html",
 			"dist/queue/index.html",
 			"dist/llms.txt",
