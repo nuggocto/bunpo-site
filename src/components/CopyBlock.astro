@@ -2,9 +2,11 @@
 interface Props {
 	label: string;
 	code: string;
+	/** Let a short command wrap on narrow screens instead of scrolling sideways. */
+	wrap?: boolean;
 }
 
-const { label, code } = Astro.props;
+const { label, code, wrap = false } = Astro.props;
 ---
 
 <div class="code-frame">
@@ -12,7 +14,11 @@ const { label, code } = Astro.props;
 		<span>{label}</span>
 		<button type="button" class="copy-btn" data-copy={code} aria-label={`Copy: ${label}`}>copy</button>
 	</div>
-	<pre><code>{code}</code></pre>
+	{/* Cloudflare's email obfuscation reads "bunpo@v0.1.2" as an address and
+	    rewrites it in the HTML; commands are never addresses. */}
+	<Fragment set:html={"<!--email_off-->"} />
+	<pre class:list={{ "code-wrap": wrap }}><code>{code}</code></pre>
+	<Fragment set:html={"<!--/email_off-->"} />
 </div>
 
 <script>

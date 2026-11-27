@@ -99,9 +99,9 @@ const platforms = [
 					macOS (no <code>sudo</code>) or <code>%USERPROFILE%\bin</code> on Windows, verifying the
 					pinned SHA-256 and checking <code>bunpo --version</code> before moving it into place.
 				</p>
-				<CopyBlock label="Linux and macOS" code={quickUnix} />
-				<CopyBlock label={`Pin a version (Linux and macOS)`} code={quickUnixPinned} />
-				<CopyBlock label="Windows PowerShell" code={quickWindows} />
+				<CopyBlock label="Linux and macOS" code={quickUnix} wrap />
+				<CopyBlock label={`Pin a version (Linux and macOS)`} code={quickUnixPinned} wrap />
+				<CopyBlock label="Windows PowerShell" code={quickWindows} wrap />
 				<p class="small muted">
 					In CI, pin a version with <code>--version {LATEST_VERSION}</code> (or{" "}
 					<code>$env:BUNPO_VERSION="{LATEST_VERSION}"</code> on Windows), or use the GitHub Action
@@ -113,7 +113,7 @@ const platforms = [
 					Inspect <a href="/install.sh">/install.sh</a> or <a href="/install.ps1">/install.ps1</a>{" "}
 					before running, or save and check its SHA-256 locally:
 				</p>
-				<CopyBlock label="Download, inspect, then run" code={readFirstUnix} />
+				<CopyBlock label="Download, inspect, then run" code={readFirstUnix} wrap />
 				<p class="small muted">
 					<code>install.sh</code> SHA-256:{" "}
 					<code style="overflow-wrap: anywhere;">{INSTALL_SH_SHA256}</code>

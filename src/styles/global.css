@@ -628,6 +628,12 @@ pre.astro-code {
 	line-height: 1.55;
 }
 
+/* Short commands wrap on a phone, so the whole line stays visible. */
+pre.code-wrap {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
 .prose pre.astro-code {
 	border: 1px solid var(--rule);
 	border-left: 3px solid var(--honey);

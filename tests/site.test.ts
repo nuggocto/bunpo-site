@@ -10,6 +10,7 @@ import {
 	INSTALL_SH_SHA256,
 } from "../src/data/install-scripts";
 import { CLI_ASSETS, LATEST_VERSION, releases } from "../src/data/releases";
+import { SECURITY_TXT } from "../src/pages/.well-known/security.txt";
 
 describe("design constraints (global.css)", () => {
 	const css = readFileSync("src/styles/global.css", "utf8");
@@ -160,6 +161,18 @@ describe("site content & data integrity", () => {
 		// the whole script, so write "${name}:" instead. $env: is the one intended use.
 		const bad = INSTALL_PS1.match(/\$(?!env:)[A-Za-z_]\w*:/g) ?? [];
 		expect(bad).toEqual([]);
+	});
+
+	test("security.txt names both contacts and expires within a year", () => {
+		// RFC 9116: Contact and Expires are required, and Expires should be under a year away.
+		expect(SECURITY_TXT).toContain("Contact: mailto:security@bunpo.org\n");
+		expect(SECURITY_TXT).toContain(
+			"Contact: https://github.com/nuggocto/bunpo/security/advisories/new\n",
+		);
+		const expires = Date.parse(SECURITY_TXT.match(/^Expires: (.+)$/m)?.[1] ?? "");
+		const days = (expires - Date.now()) / 86_400_000;
+		expect(days).toBeGreaterThan(300);
+		expect(days).toBeLessThan(365);
 	});
 });
 
