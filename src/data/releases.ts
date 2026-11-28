@@ -19,9 +19,32 @@ export interface Release {
 	checksums?: ReleaseChecksums;
 }
 
-export const LATEST_VERSION = "v0.1.2";
+export const LATEST_VERSION = "v0.1.3";
 
 export const releases: Release[] = [
+	{
+		version: "v0.1.3",
+		date: "2026-11-28",
+		summary:
+			"Live-queue runner and --status fixes, matching cursor and limit rules on both queue servers, safer release promotion, and a corrected systemd example.",
+		url: "https://github.com/nuggocto/bunpo/releases/tag/v0.1.3",
+		notes: [
+			"bunpo-server and the Cloudflare Worker now read the cursor and limit query parameters the same way: plain decimal digits, with cursor from 0 to 20,000.",
+			"bunpo --queue stops a batch and exits 1 when heartbeats keep failing past the 2-minute retry budget, instead of retrying forever while the test command runs.",
+			"bunpo --queue --status checks the build once more after the last page, so a late init conflict on a failed build no longer produces report-0.json.",
+			"The systemd example in docs/self-hosting.md now writes your generated tokens into /etc/bunpo/env. If you copied the old example with its placeholder tokens, rotate both tokens.",
+			"Release promotion is serialized and never moves latest or the v0 tag back to an older release.",
+			"The bunpo-server container builds offline from the standard library, and the contributor fixture folder is checked for ownership before use.",
+		],
+		checksums: {
+			"bunpo-linux-amd64": "f60b3bd87b3ec69badaee76aafd5d57ed0a42aa317f0390513dc9b1ec1bac8f1",
+			"bunpo-linux-arm64": "e454756f60484b8abb4054fe4e8fb105f1bbec743bc8a4b4573e30a2c8c807d0",
+			"bunpo-darwin-amd64": "bb44ea7aa1607e99778ba7247be82a67d0786b3d5ca9713bfe71d87eb47310a8",
+			"bunpo-darwin-arm64": "a680bd6f385fb96c4b038404c728d453865388e4f43f86ea26688f6808752571",
+			"bunpo-windows-amd64.exe": "e5e6672466bb6f6c2239192557c76dcd0346d9acec1e0e06ce7fd5d018c84d18",
+			"bunpo-windows-arm64.exe": "af10da9e533901beac9da335e302f0f1c4aa30b42c103944a694826348fea44b",
+		},
+	},
 	{
 		version: "v0.1.2",
 		date: "2026-11-26",
